@@ -1,75 +1,116 @@
 # Standalone Integrations
 
-A flexible web interface for interacting with various API integrations. This project provides a simple, user-friendly way to select different integrations, choose endpoints, and execute API requests with customizable parameters.
-
-## Features
-
-- **Integration Selection**: Choose from multiple available integrations via a dropdown menu
-- **Dynamic Endpoint Selection**: Endpoints are dynamically populated based on the selected integration
-- **Parameter Form Generation**: Input forms are automatically generated based on the selected endpoint's required parameters
-- **Response Visualization**: View API responses in a tabbed interface (Response, Headers, Raw)
-- **Error Handling**: Clear error messages for failed requests
-
-## Getting Started
-
-1. Clone or download this repository
-2. Open `index.html` in your web browser
-3. Select an integration from the dropdown in the top-right corner
-4. Choose an endpoint from the available options
-5. Fill in any required parameters
-6. Click "Execute Request" to see the results
+A web application for testing API integrations with a React frontend and Node.js backend.
 
 ## Project Structure
 
-- `index.html` - Main HTML structure
-- `styles.css` - CSS styling for the application
-- `script.js` - JavaScript functionality including integration configurations
+- `/integrations-fe` - React frontend application
+- `/server` - Node.js backend server
+  - `/server/routes` - API route handlers
+
+## Setup Instructions
+
+### Backend Setup
+
+1. Navigate to the server directory:
+   ```
+   cd server
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Create a `.env` file in the server directory with the following content:
+   ```
+   PORT=5000
+   USE_MOCK_DATA=false
+   SECURITYSCORECARD_API_KEY=your_api_key_here
+   ```
+   
+   Note: Replace `your_api_key_here` with your actual SecurityScorecard API key to fetch real data. If you don't have an API key, you can set `USE_MOCK_DATA=true` to use mock data instead.
+
+4. Start the server:
+   ```
+   npm run dev
+   ```
+
+### Frontend Setup
+
+1. Navigate to the frontend directory:
+   ```
+   cd integrations-fe
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Build the React app:
+   ```
+   npm run build
+   ```
+
+## Running the Application
+
+### Important Note About API Communication
+
+The frontend application is configured to communicate directly with the backend server at `http://localhost:5000`. This is necessary because the proxy configuration in package.json may not always work correctly in development mode. If you encounter any issues with API requests, ensure that:
+
+1. The backend server is running on port 5000
+2. CORS is properly configured on the backend (already done in the provided code)
+3. The frontend is making requests to the correct URL (http://localhost:5000/api/...)
+
+### Option 1: Development Mode (Recommended for Development)
+
+1. Start the backend server:
+   ```
+   cd server
+   npm install
+   npm run dev
+   ```
+
+2. In a separate terminal, start the React development server:
+   ```
+   cd integrations-fe
+   npm install
+   npm start
+   ```
+
+3. Access the application:
+   - Backend API: http://localhost:5000
+   - React frontend: http://localhost:3000
+
+### Option 2: Production Mode
+
+1. Build the React app:
+   ```
+   cd integrations-fe
+   npm install
+   npm run build
+   ```
+
+2. Start the backend server:
+   ```
+   cd server
+   npm install
+   npm run dev
+   ```
+
+3. Access the application at http://localhost:5000
+
+## Available API Integrations
+
+- **SecurityScorecard** - Access SecurityScorecard API endpoints
+  - Get Portfolios
+  - Get Portfolio Companies
 
 ## Adding New Integrations
 
-To add a new integration, edit the `integrations` object in `script.js`. Follow the existing pattern:
+To add a new integration:
 
-```javascript
-newIntegration: {
-    name: "Integration Name",
-    baseUrl: "https://api.example.com",
-    auth: {
-        type: "apiKey", // or "oauth", "basic", etc.
-        keyName: "api-key",
-        // Add other auth details as needed
-    },
-    endpoints: [
-        {
-            id: "uniqueEndpointId",
-            name: "Endpoint Name",
-            method: "GET", // or POST, PUT, DELETE, etc.
-            path: "/endpoint-path",
-            description: "Description of what this endpoint does",
-            parameters: [
-                {
-                    name: "paramName",
-                    type: "text", // or number, select, textarea
-                    required: true, // or false
-                    default: "defaultValue", // optional
-                    description: "Parameter description"
-                    // For select type, add options: ["option1", "option2"]
-                }
-            ]
-        }
-    ]
-}
-```
-
-## Customization
-
-- Modify the CSS in `styles.css` to change the appearance
-- Update the mock data generation in `generateMockData()` function to simulate different responses
-- Add authentication handling in the `simulateApiCall()` function for real API integration
-
-## Future Enhancements
-
-- Add authentication UI for different auth types
-- Implement persistent storage for saved requests
-- Add request history
-- Support for file uploads
-- Response data visualization (charts, graphs)
+1. Create a new route file in `/server/routes`
+2. Add the route to the server.js file
+3. Add the integration configuration to the ApiTester component in the React app
