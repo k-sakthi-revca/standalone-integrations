@@ -226,6 +226,21 @@ const integrations = {
             description: "Industry name (e.g., Technology, Finance, Healthcare)"
           }
         ]
+      },
+      {
+        id: "getCompanyActiveIssues",
+        name: "Get Company Active Issues",
+        method: "GET",
+        path: "/companies/{scorecard_identifier}/active-issues",
+        description: "Get a company's active issues",
+        parameters: [
+          {
+            name: "scorecard_identifier",
+            type: "text",
+            required: true,
+            description: "Scorecard identifier (e.g., example.com)"
+          }
+        ]
       }
     ]
   },

@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
 
 // Import routes
 const securityScorecardsRoutes = require('./routes/securityscorecards');
@@ -30,6 +31,23 @@ app.get('/api/test', (req, res) => {
 
 // API Routes
 app.use('/api/securityscorecards', securityScorecardsRoutes);
+
+app.post('/api/meraki/webhook', (req, res) => {
+  const secret = "193296e25da6f13d794296adf525b0b49e42f664"; // Store in .env
+  const signature = req.headers['x-cisco-meraki-signature'];
+  const body = JSON.stringify(req.body);
+  const hmac = crypto.createHmac('sha1', secret).update(body).digest('hex');
+
+  if (signature === hmac) {
+    console.log("✅ Signature Verified");
+    // Process webhook
+    res.sendStatus(200);
+  } else {
+    console.log("❌ Invalid signature");
+    res.sendStatus(403);
+  }
+});
+
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');
