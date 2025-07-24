@@ -465,6 +465,28 @@ router.get('/industries/:industry/history/score', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /companies/{scorecard_identifier}/active-issues
+ * Get a company's active issues
+ */
+router.get('/companies/:scorecard_identifier/active-issues', async (req, res, next) => {
+  try {
+    const { scorecard_identifier } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/companies/${scorecard_identifier}/active-issues`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
 // Helper function to handle API errors
 function handleApiError(error, res, next) {
   console.log('Error occurred while making API request:');
