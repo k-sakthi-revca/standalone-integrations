@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ApiTester.css';
 
 // Integration configurations
@@ -414,6 +414,120 @@ const ApiTester = () => {
     ));
   };
 
+  // JSONViewer component for rendering JSON with syntax highlighting and collapsible sections
+  const JSONViewer = ({ data }) => {
+    const [expandedPaths, setExpandedPaths] = useState({});
+    
+    const toggleExpand = (path) => {
+      setExpandedPaths(prev => ({
+        ...prev,
+        [path]: !prev[path]
+      }));
+    };
+    
+    const isExpanded = (path) => {
+      return expandedPaths[path] === true;
+    };
+    
+    const renderValue = useCallback((value, path = '', level = 0) => {
+      const indent = '  '.repeat(level);
+      
+      if (value === null) {
+        return <span className="json-null">null</span>;
+      }
+      
+      if (typeof value === 'boolean') {
+        return <span className="json-boolean">{value.toString()}</span>;
+      }
+      
+      if (typeof value === 'number') {
+        return <span className="json-number">{value}</span>;
+      }
+      
+      if (typeof value === 'string') {
+        return <span className="json-string">"{value}"</span>;
+      }
+      
+      if (Array.isArray(value)) {
+        if (value.length === 0) {
+          return <span className="json-mark">[]</span>;
+        }
+        
+        const expanded = isExpanded(path);
+        
+        return (
+          <div style={{ textAlign: 'left' }}>
+            <span 
+              className={`json-toggle ${expanded ? 'open' : ''}`} 
+              onClick={() => toggleExpand(path)}
+            />
+            <span className="json-mark">[</span>
+            {expanded ? (
+              <div className="json-line-content" style={{ textAlign: 'left' }}>
+                {value.map((item, index) => (
+                  <div key={`${path}-${index}`} className="json-line">
+                    {renderValue(item, `${path}.${index}`, level + 1)}
+                    {index < value.length - 1 && <span className="json-mark">,</span>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="json-collapsed">...</span>
+            )}
+            <div className="json-line">
+              <span className="json-mark">]</span>
+            </div>
+          </div>
+        );
+      }
+      
+      if (typeof value === 'object') {
+        const keys = Object.keys(value);
+        
+        if (keys.length === 0) {
+          return <span className="json-mark">{}</span>;
+        }
+        
+        const expanded = isExpanded(path);
+        
+        return (
+          <div style={{ textAlign: 'left' }}>
+            <span 
+              className={`json-toggle ${expanded ? 'open' : ''}`} 
+              onClick={() => toggleExpand(path)}
+            />
+            <span className="json-mark">{'{'}</span>
+            {expanded ? (
+              <div className="json-line-content" style={{ textAlign: 'left' }}>
+                {keys.map((key, index) => (
+                  <div key={`${path}-${key}`} className="json-line">
+                    <span className="json-key">"{key}"</span>
+                    <span className="json-mark">: </span>
+                    {renderValue(value[key], `${path}.${key}`, level + 1)}
+                    {index < keys.length - 1 && <span className="json-mark">,</span>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="json-collapsed">...</span>
+            )}
+            <div className="json-line">
+              <span className="json-mark">{'}'}</span>
+            </div>
+          </div>
+        );
+      }
+      
+      return <span>{String(value)}</span>;
+    }, [expandedPaths]);
+    
+    return (
+      <div className="json-viewer" style={{ textAlign: 'left' }}>
+        {renderValue(data, 'root')}
+      </div>
+    );
+  };
+  
   // Render response tabs
   const renderResponseTabs = () => {
     if (!response) return null;
@@ -444,7 +558,7 @@ const ApiTester = () => {
         
         <div className="tab-content">
           <div className={`tab-pane ${activeTab === 'response' ? 'active' : ''}`}>
-            <pre>{JSON.stringify(response.data, null, 2)}</pre>
+            <JSONViewer data={response.data} />
           </div>
           <div className={`tab-pane ${activeTab === 'headers' ? 'active' : ''}`}>
             <pre>
