@@ -6,6 +6,7 @@ const crypto = require('crypto');
 
 // Import routes
 const securityScorecardsRoutes = require('./routes/securityscorecards');
+const merakiRoutes = require('./routes/meraki');
 
 // Initialize express app
 const app = express();
@@ -31,6 +32,7 @@ app.get('/api/test', (req, res) => {
 
 // API Routes
 app.use('/api/securityscorecards', securityScorecardsRoutes);
+app.use('/api/meraki', merakiRoutes);
 
 app.post('/api/meraki/webhook', (req, res) => {
   const secret = "193296e25da6f13d794296adf525b0b49e42f664"; // Store in .env
