@@ -121,6 +121,111 @@ const integrations = {
             description: "Tag Group ID"
           }
         ]
+      },
+      {
+        id: "getCompanyInfo",
+        name: "Get Company Information",
+        method: "GET",
+        path: "/companies/{scorecard_identifier}",
+        description: "Get a company information and scorecard summary",
+        parameters: [
+          {
+            name: "scorecard_identifier",
+            type: "text",
+            required: true,
+            description: "Scorecard identifier (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getCompanySummaryFactors",
+        name: "Get Company Summary & Factors",
+        method: "GET",
+        path: "/companies/{domain}/summary-factors",
+        description: "Get a company information, scorecard summary, factor scores and issue counts",
+        parameters: [
+          {
+            name: "domain",
+            type: "text",
+            required: true,
+            description: "Company domain (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getCompanyFactors",
+        name: "Get Company Factors",
+        method: "GET",
+        path: "/companies/{scorecard_identifier}/factors",
+        description: "Get a company's factor scores and issue counts",
+        parameters: [
+          {
+            name: "scorecard_identifier",
+            type: "text",
+            required: true,
+            description: "Scorecard identifier (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getCompanyHistoricalScores",
+        name: "Get Company Historical Scores",
+        method: "GET",
+        path: "/companies/{scorecard_identifier}/history/score",
+        description: "Get a company's historical scores",
+        parameters: [
+          {
+            name: "scorecard_identifier",
+            type: "text",
+            required: true,
+            description: "Scorecard identifier (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getCompanyHistoricalFactorScores",
+        name: "Get Company Historical Factor Scores",
+        method: "GET",
+        path: "/companies/{scorecard_identifier}/history/factors/score",
+        description: "Get a company's historical factor scores",
+        parameters: [
+          {
+            name: "scorecard_identifier",
+            type: "text",
+            required: true,
+            description: "Scorecard identifier (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getIndustryScore",
+        name: "Get Industry Score",
+        method: "GET",
+        path: "/industries/{industry}/score",
+        description: "Get score for the industry",
+        parameters: [
+          {
+            name: "industry",
+            type: "text",
+            required: true,
+            description: "Industry name (e.g., Technology, Finance, Healthcare)"
+          }
+        ]
+      },
+      {
+        id: "getIndustryHistoricalScores",
+        name: "Get Industry Historical Scores",
+        method: "GET",
+        path: "/industries/{industry}/history/score",
+        description: "Get an industry's historical scores",
+        parameters: [
+          {
+            name: "industry",
+            type: "text",
+            required: true,
+            description: "Industry name (e.g., Technology, Finance, Healthcare)"
+          }
+        ]
       }
     ]
   },
@@ -498,21 +603,8 @@ const ApiTester = () => {
     ));
   };
 
-  // JSONViewer component for rendering JSON with syntax highlighting and collapsible sections
+  // JSONViewer component for rendering JSON with syntax highlighting - always fully expanded
   const JSONViewer = ({ data }) => {
-    const [expandedPaths, setExpandedPaths] = useState({});
-    
-    const toggleExpand = (path) => {
-      setExpandedPaths(prev => ({
-        ...prev,
-        [path]: !prev[path]
-      }));
-    };
-    
-    const isExpanded = (path) => {
-      return expandedPaths[path] === true;
-    };
-    
     const renderValue = useCallback((value, path = '', level = 0) => {
       const indent = '  '.repeat(level);
       
@@ -537,27 +629,17 @@ const ApiTester = () => {
           return <span className="json-mark">[]</span>;
         }
         
-        const expanded = isExpanded(path);
-        
         return (
           <div style={{ textAlign: 'left' }}>
-            <span 
-              className={`json-toggle ${expanded ? 'open' : ''}`} 
-              onClick={() => toggleExpand(path)}
-            />
             <span className="json-mark">[</span>
-            {expanded ? (
-              <div className="json-line-content" style={{ textAlign: 'left' }}>
-                {value.map((item, index) => (
-                  <div key={`${path}-${index}`} className="json-line">
-                    {renderValue(item, `${path}.${index}`, level + 1)}
-                    {index < value.length - 1 && <span className="json-mark">,</span>}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className="json-collapsed">...</span>
-            )}
+            <div className="json-line-content" style={{ textAlign: 'left' }}>
+              {value.map((item, index) => (
+                <div key={`${path}-${index}`} className="json-line">
+                  {renderValue(item, `${path}.${index}`, level + 1)}
+                  {index < value.length - 1 && <span className="json-mark">,</span>}
+                </div>
+              ))}
+            </div>
             <div className="json-line">
               <span className="json-mark">]</span>
             </div>
@@ -572,29 +654,19 @@ const ApiTester = () => {
           return <span className="json-mark">{}</span>;
         }
         
-        const expanded = isExpanded(path);
-        
         return (
           <div style={{ textAlign: 'left' }}>
-            <span 
-              className={`json-toggle ${expanded ? 'open' : ''}`} 
-              onClick={() => toggleExpand(path)}
-            />
             <span className="json-mark">{'{'}</span>
-            {expanded ? (
-              <div className="json-line-content" style={{ textAlign: 'left' }}>
-                {keys.map((key, index) => (
-                  <div key={`${path}-${key}`} className="json-line">
-                    <span className="json-key">"{key}"</span>
-                    <span className="json-mark">: </span>
-                    {renderValue(value[key], `${path}.${key}`, level + 1)}
-                    {index < keys.length - 1 && <span className="json-mark">,</span>}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className="json-collapsed">...</span>
-            )}
+            <div className="json-line-content" style={{ textAlign: 'left' }}>
+              {keys.map((key, index) => (
+                <div key={`${path}-${key}`} className="json-line">
+                  <span className="json-key">"{key}"</span>
+                  <span className="json-mark">: </span>
+                  {renderValue(value[key], `${path}.${key}`, level + 1)}
+                  {index < keys.length - 1 && <span className="json-mark">,</span>}
+                </div>
+              ))}
+            </div>
             <div className="json-line">
               <span className="json-mark">{'}'}</span>
             </div>
@@ -603,7 +675,7 @@ const ApiTester = () => {
       }
       
       return <span>{String(value)}</span>;
-    }, [expandedPaths]);
+    }, []);
     
     return (
       <div className="json-viewer" style={{ textAlign: 'left' }}>

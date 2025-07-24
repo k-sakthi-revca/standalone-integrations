@@ -311,6 +311,160 @@ router.get('/scorecard-tags/groups/:id', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /companies/{scorecard_identifier}
+ * Get a company information and scorecard summary
+ */
+router.get('/companies/:scorecard_identifier', async (req, res, next) => {
+  try {
+    const { scorecard_identifier } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/companies/${scorecard_identifier}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /companies/{domain}/summary-factors
+ * Get a company information, scorecard summary, factor scores and issue counts
+ */
+router.get('/companies/:domain/summary-factors', async (req, res, next) => {
+  try {
+    const { domain } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/companies/${domain}/summary-factors`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /companies/{scorecard_identifier}/factors
+ * Get a company's factor scores and issue counts
+ */
+router.get('/companies/:scorecard_identifier/factors', async (req, res, next) => {
+  try {
+    const { scorecard_identifier } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/companies/${scorecard_identifier}/factors`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /companies/{scorecard_identifier}/history/score
+ * Get a company's historical scores
+ */
+router.get('/companies/:scorecard_identifier/history/score', async (req, res, next) => {
+  try {
+    const { scorecard_identifier } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/companies/${scorecard_identifier}/history/score`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /companies/{scorecard_identifier}/history/factors/score
+ * Get a company's historical factor scores
+ */
+router.get('/companies/:scorecard_identifier/history/factors/score', async (req, res, next) => {
+  try {
+    const { scorecard_identifier } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/companies/${scorecard_identifier}/history/factors/score`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /industries/{industry}/score
+ * Get score for the industry
+ */
+router.get('/industries/:industry/score', async (req, res, next) => {
+  try {
+    const { industry } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/industries/${industry}/score`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /industries/{industry}/history/score
+ * Get an industry's historical scores
+ */
+router.get('/industries/:industry/history/score', async (req, res, next) => {
+  try {
+    const { industry } = req.params;
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/industries/${industry}/history/score`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
 // Helper function to handle API errors
 function handleApiError(error, res, next) {
   console.log('Error occurred while making API request:');
