@@ -144,6 +144,7 @@ select:focus, input:focus, textarea:focus {
 .tab-pane {
   display: none;
   padding: 15px;
+  text-align: left;
 }
 
 .tab-pane.active {
@@ -158,6 +159,74 @@ pre {
   font-size: 13px;
   line-height: 1.5;
   overflow-x: auto;
+}
+
+/* JSON Viewer Styles */
+.json-viewer {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 10px;
+  overflow: auto;
+  max-height: 600px;
+  text-align: left;
+}
+
+.json-viewer .json-key {
+  color: #0451a5;
+  font-weight: bold;
+}
+
+.json-viewer .json-string {
+  color: #a31515;
+}
+
+.json-viewer .json-number {
+  color: #098658;
+}
+
+.json-viewer .json-boolean {
+  color: #0000ff;
+}
+
+.json-viewer .json-null {
+  color: #7a7a7a;
+}
+
+.json-viewer .json-mark {
+  color: #000000;
+}
+
+.json-line {
+  line-height: 1.5;
+  margin: 2px 0;
+  display: flex;
+  text-align: left;
+}
+
+.json-line-content {
+  margin-left: 4px;
+}
+
+.json-toggle {
+  cursor: pointer;
+  user-select: none;
+  margin-right: 4px;
+}
+
+.json-toggle:before {
+  content: "▶";
+  font-size: 10px;
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+}
+
+.json-toggle.open:before {
+  content: "▼";
+}
+
+.json-collapsed {
+  display: none;
 }
 
 .loading {
