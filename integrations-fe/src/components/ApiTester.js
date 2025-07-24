@@ -37,6 +37,90 @@ const integrations = {
             description: "Portfolio ID"
           }
         ]
+      },
+      {
+        id: "getFollowedCompanies",
+        name: "Get Followed Companies",
+        method: "GET",
+        path: "/all-companies",
+        description: "Find followed companies",
+        parameters: []
+      },
+      {
+        id: "getFollowedCompanyByDomain",
+        name: "Get Followed Company by Domain",
+        method: "GET",
+        path: "/all-companies/{domain}",
+        description: "Get followed company by domain",
+        parameters: [
+          {
+            name: "domain",
+            type: "text",
+            required: true,
+            description: "Company domain (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getScorecardNotes",
+        name: "Get Scorecard Notes",
+        method: "GET",
+        path: "/scorecard-notes/{domain}",
+        description: "Find scorecard notes for a company",
+        parameters: [
+          {
+            name: "domain",
+            type: "text",
+            required: true,
+            description: "Company domain (e.g., example.com)"
+          }
+        ]
+      },
+      {
+        id: "getScorecardTags",
+        name: "Get Scorecard Tags",
+        method: "GET",
+        path: "/scorecard-tags",
+        description: "Get all scorecard tags",
+        parameters: []
+      },
+      {
+        id: "getTagCompanies",
+        name: "Get Companies by Tag",
+        method: "GET",
+        path: "/scorecard-tags/{id}/companies",
+        description: "Get all companies associated with a scorecard tag",
+        parameters: [
+          {
+            name: "id",
+            type: "text",
+            required: true,
+            description: "Tag ID"
+          }
+        ]
+      },
+      {
+        id: "getTagGroups",
+        name: "Get Tag Groups",
+        method: "GET",
+        path: "/scorecard-tags/groups",
+        description: "Get all scorecard tag groups",
+        parameters: []
+      },
+      {
+        id: "getTagGroup",
+        name: "Get Tag Group",
+        method: "GET",
+        path: "/scorecard-tags/groups/{id}",
+        description: "Get a specific scorecard tag group",
+        parameters: [
+          {
+            name: "id",
+            type: "text",
+            required: true,
+            description: "Tag Group ID"
+          }
+        ]
       }
     ]
   },

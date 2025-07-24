@@ -100,6 +100,217 @@ router.get('/portfolios/:portfolioId/companies', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /all-companies
+ * Find followed companies
+ */
+router.get('/all-companies', async (req, res, next) => {
+  try {
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockFollowedCompanies());
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/all-companies`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /all-companies/{domain}
+ * Get followed company by domain
+ */
+router.get('/all-companies/:domain', async (req, res, next) => {
+  try {
+    const { domain } = req.params;
+    
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockFollowedCompanyByDomain(domain));
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/all-companies/${domain}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /scorecard-notes/{domain}
+ * Find scorecard notes
+ */
+router.get('/scorecard-notes/:domain', async (req, res, next) => {
+  try {
+    const { domain } = req.params;
+    
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockScorecardNotes(domain));
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/scorecard-notes/${domain}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /scorecard-tags
+ * Get scorecard tags
+ */
+router.get('/scorecard-tags', async (req, res, next) => {
+  try {
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockScorecardTags());
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/scorecard-tags`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /scorecard-tags/{id}/companies
+ * Get all companies associated with a scorecard tag
+ */
+router.get('/scorecard-tags/:id/companies', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockTagCompanies(id));
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/scorecard-tags/${id}/companies`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /scorecard-tags/groups
+ * Get all scorecard tag groups
+ */
+router.get('/scorecard-tags/groups', async (req, res, next) => {
+  try {
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockTagGroups());
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/scorecard-tags/groups`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /scorecard-tags/groups/{id}
+ * Get a scorecard tag group
+ */
+router.get('/scorecard-tags/groups/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // In a production environment, we would make a real API call
+    // For demo purposes, we'll check if we should use mock data
+    const useMockData = req.query.mock === 'true' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (useMockData) {
+      // Return mock data
+      return res.json(generateMockTagGroup(id));
+    }
+    
+    // Make real API call to SecurityScorecard
+    const response = await axios.get(`${BASE_URL}/scorecard-tags/groups/${id}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': req.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
 // Helper function to handle API errors
 function handleApiError(error, res, next) {
   console.log('Error occurred while making API request:');
@@ -160,6 +371,109 @@ function generateMockPortfolioCompanies(portfolioId) {
     count: 10,
     total: 25,
     portfolio_id: portfolioId
+  };
+}
+
+function generateMockFollowedCompanies() {
+  return {
+    entries: Array(8).fill(0).map((_, i) => ({
+      domain: `followed-company${i + 1}.com`,
+      name: `Followed Company ${i + 1}`,
+      score: Math.floor(Math.random() * 100),
+      industry: ['Technology', 'Finance', 'Healthcare', 'Retail', 'Manufacturing'][Math.floor(Math.random() * 5)],
+      followed_since: new Date(Date.now() - Math.random() * 86400000 * 60).toISOString()
+    })),
+    count: 8,
+    total: 8
+  };
+}
+
+function generateMockFollowedCompanyByDomain(domain) {
+  return {
+    domain: domain,
+    name: `Company ${domain.split('.')[0]}`,
+    score: Math.floor(Math.random() * 100),
+    industry: ['Technology', 'Finance', 'Healthcare', 'Retail', 'Manufacturing'][Math.floor(Math.random() * 5)],
+    followed_since: new Date(Date.now() - Math.random() * 86400000 * 60).toISOString(),
+    details: {
+      website: `https://${domain}`,
+      headquarters: ['New York, USA', 'London, UK', 'Tokyo, Japan', 'Berlin, Germany', 'Sydney, Australia'][Math.floor(Math.random() * 5)],
+      employees: [50, 100, 500, 1000, 5000, 10000][Math.floor(Math.random() * 6)]
+    }
+  };
+}
+
+function generateMockScorecardNotes(domain) {
+  return {
+    domain: domain,
+    notes: Array(3).fill(0).map((_, i) => ({
+      id: Math.random().toString(36).substring(2, 15),
+      content: `Note ${i + 1} for ${domain}: ${['Important security finding', 'Follow up required', 'Resolved issue', 'Pending review'][Math.floor(Math.random() * 4)]}`,
+      created_by: `user${Math.floor(Math.random() * 5) + 1}@example.com`,
+      created_at: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString(),
+      updated_at: new Date(Date.now() - Math.random() * 86400000 * 10).toISOString()
+    })),
+    count: 3
+  };
+}
+
+function generateMockScorecardTags() {
+  return {
+    entries: Array(5).fill(0).map((_, i) => ({
+      id: Math.random().toString(36).substring(2, 10),
+      name: `Tag ${i + 1}`,
+      description: `Description for Tag ${i + 1}`,
+      color: ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3'][i],
+      created_at: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString(),
+      company_count: Math.floor(Math.random() * 20) + 1
+    })),
+    count: 5,
+    total: 5
+  };
+}
+
+function generateMockTagCompanies(tagId) {
+  return {
+    tag_id: tagId,
+    entries: Array(6).fill(0).map((_, i) => ({
+      domain: `tagged-company${i + 1}.com`,
+      name: `Tagged Company ${i + 1}`,
+      score: Math.floor(Math.random() * 100),
+      industry: ['Technology', 'Finance', 'Healthcare', 'Retail', 'Manufacturing'][Math.floor(Math.random() * 5)],
+      tagged_at: new Date(Date.now() - Math.random() * 86400000 * 15).toISOString()
+    })),
+    count: 6,
+    total: 6
+  };
+}
+
+function generateMockTagGroups() {
+  return {
+    entries: Array(3).fill(0).map((_, i) => ({
+      id: Math.random().toString(36).substring(2, 10),
+      name: `Tag Group ${i + 1}`,
+      description: `Description for Tag Group ${i + 1}`,
+      created_at: new Date(Date.now() - Math.random() * 86400000 * 45).toISOString(),
+      tag_count: Math.floor(Math.random() * 10) + 1
+    })),
+    count: 3,
+    total: 3
+  };
+}
+
+function generateMockTagGroup(groupId) {
+  return {
+    id: groupId,
+    name: `Tag Group ${groupId.substring(0, 3)}`,
+    description: `Detailed description for Tag Group ${groupId.substring(0, 3)}`,
+    created_at: new Date(Date.now() - Math.random() * 86400000 * 45).toISOString(),
+    updated_at: new Date(Date.now() - Math.random() * 86400000 * 10).toISOString(),
+    tags: Array(4).fill(0).map((_, i) => ({
+      id: Math.random().toString(36).substring(2, 10),
+      name: `Tag ${i + 1} in Group ${groupId.substring(0, 3)}`,
+      color: ['#FF5733', '#33FF57', '#3357FF', '#F3FF33'][i],
+      company_count: Math.floor(Math.random() * 15) + 1
+    }))
   };
 }
 
