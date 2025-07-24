@@ -292,26 +292,119 @@ const integrations = {
       }
     ]
   },
-  integration2: {
-    name: "Integration 2",
-    baseUrl: "http://localhost:5000/api/integration2",
+  meraki: {
+    name: "Cisco Meraki",
+    baseUrl: "http://localhost:5000/api/meraki",
     auth: {
-      type: "basic",
+      type: "apiKey",
+      keyName: "X-Cisco-Meraki-API-Key",
+    },
+    headers: {
+      "Accept": "application/json"
     },
     endpoints: [
       {
-        id: "getData",
-        name: "Get Data",
+        id: "getOrganizations",
+        name: "Get All Organizations",
         method: "GET",
-        path: "/data",
-        description: "Retrieve data",
+        path: "/organizations",
+        description: "Retrieve all organizations",
         parameters: [
           {
-            name: "type",
-            type: "select",
-            options: ["type1", "type2", "type3"],
+            name: "baseUri",
+            type: "text",
             required: true,
-            description: "Type of data to retrieve"
+            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
+          }
+        ]
+      },
+      {
+        id: "getOrganization",
+        name: "Get Organization",
+        method: "GET",
+        path: "/organizations/{organizationId}",
+        description: "Retrieve a specific organization",
+        parameters: [
+          {
+            name: "baseUri",
+            type: "text",
+            required: true,
+            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
+          },
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationDevices",
+        name: "Get Organization Devices",
+        method: "GET",
+        path: "/organizations/{organizationId}/devices",
+        description: "Retrieve devices in a specific organization",
+        parameters: [
+          {
+            name: "baseUri",
+            type: "text",
+            required: true,
+            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
+          },
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationActionBatches",
+        name: "Get Organization Action Batches",
+        method: "GET",
+        path: "/organizations/{organizationId}/actionBatches",
+        description: "Retrieve action batches for a specific organization",
+        parameters: [
+          {
+            name: "baseUri",
+            type: "text",
+            required: true,
+            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
+          },
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationActionBatch",
+        name: "Get Organization Action Batch",
+        method: "GET",
+        path: "/organizations/{organizationId}/actionBatches/{actionBatchId}",
+        description: "Retrieve a specific action batch for an organization",
+        parameters: [
+          {
+            name: "baseUri",
+            type: "text",
+            required: true,
+            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
+          },
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          },
+          {
+            name: "actionBatchId",
+            type: "text",
+            required: true,
+            description: "Action Batch ID"
           }
         ]
       }
@@ -382,20 +475,30 @@ const ApiTester = () => {
       return;
     }
 
-    // Process path parameters
-    let path = currentEndpoint.path;
-    Object.keys(paramValues).forEach(paramName => {
-      // Replace path parameters in the format {param_name}
-      const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
-      if (pathParamRegex.test(path)) {
-        path = path.replace(pathParamRegex, paramValues[paramName]);
-      }
-    });
-
     // Prepare headers
     const headers = {
       'Content-Type': 'application/json'
     };
+    
+    // Process path parameters
+    let path = currentEndpoint.path;
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(paramValues).forEach(paramName => {
+      // Handle baseUri parameter for Meraki API
+      if (paramName === 'baseUri' && selectedIntegration === 'meraki') {
+        // Add baseUri as a query parameter for Meraki API
+        queryParams.append('baseUri', paramValues[paramName]);
+        // Also add it as a header
+        headers['X-Meraki-Base-URI'] = paramValues[paramName];
+      } else {
+        // Replace path parameters in the format {param_name}
+        const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
+        if (pathParamRegex.test(path)) {
+          path = path.replace(pathParamRegex, paramValues[paramName]);
+        }
+      }
+    });
 
     // Add integration-specific headers
     if (currentIntegration.headers) {
@@ -451,8 +554,12 @@ const ApiTester = () => {
     setResponse(null);
 
     try {
-      // Use the path as is without forcing mock data
-      const url = `${currentIntegration.baseUrl}${path}`;
+      // Build the URL with query parameters if any
+      let url = `${currentIntegration.baseUrl}${path}`;
+      const queryString = queryParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
       
       // Make the API call
       const res = await fetch(url, options);
