@@ -5,9 +5,7 @@ const router = express.Router();
 // Middleware to handle API key authentication
 const authenticateApiKey = (req, res, next) => {
   console.log('Meraki Authentication middleware triggered');
-  
-  // Try to get API key from query parameters, request body, or headers (in that order)
-  const apiKey = req.query.apiKey || (req.body && req.body.apiKey) || req.headers['x-cisco-meraki-api-key'];
+  const apiKey = req.headers['x-cisco-meraki-api-key'];
   
   if (!apiKey) {
     console.log('No API key provided');
@@ -18,7 +16,7 @@ const authenticateApiKey = (req, res, next) => {
   }
   
   // Store the API key for use in the route handlers
-  console.log('API key provided',apiKey);
+  console.log('API key provided');
   req.body.apiKey = apiKey;
   next();
 };
@@ -59,8 +57,7 @@ router.get('/organizations', async (req, res, next) => {
         'X-Cisco-Meraki-API-Key': req.body.apiKey
       }
     });
-    console.log(`${req.query.baseUri}/api/v1/organizations`)
-    console.log("response",response.data)
+    
     res.json(response.data);
   } catch (error) {
     handleApiError(error, res, next);

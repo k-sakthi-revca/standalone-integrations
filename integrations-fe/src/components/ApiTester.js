@@ -302,6 +302,14 @@ const integrations = {
     headers: {
       "Accept": "application/json"
     },
+    // Additional configuration for Meraki
+    additionalConfig: {
+      baseUri: {
+        name: "Base URI",
+        description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)",
+        required: true
+      }
+    },
     endpoints: [
       {
         id: "getOrganizations",
@@ -309,14 +317,7 @@ const integrations = {
         method: "GET",
         path: "/organizations",
         description: "Retrieve all organizations",
-        parameters: [
-          {
-            name: "baseUri",
-            type: "text",
-            required: true,
-            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
-          }
-        ]
+        parameters: []
       },
       {
         id: "getOrganization",
@@ -325,12 +326,6 @@ const integrations = {
         path: "/organizations/{organizationId}",
         description: "Retrieve a specific organization",
         parameters: [
-          {
-            name: "baseUri",
-            type: "text",
-            required: true,
-            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
-          },
           {
             name: "organizationId",
             type: "text",
@@ -347,12 +342,6 @@ const integrations = {
         description: "Retrieve devices in a specific organization",
         parameters: [
           {
-            name: "baseUri",
-            type: "text",
-            required: true,
-            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
-          },
-          {
             name: "organizationId",
             type: "text",
             required: true,
@@ -368,12 +357,6 @@ const integrations = {
         description: "Retrieve action batches for a specific organization",
         parameters: [
           {
-            name: "baseUri",
-            type: "text",
-            required: true,
-            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
-          },
-          {
             name: "organizationId",
             type: "text",
             required: true,
@@ -388,12 +371,6 @@ const integrations = {
         path: "/organizations/{organizationId}/actionBatches/{actionBatchId}",
         description: "Retrieve a specific action batch for an organization",
         parameters: [
-          {
-            name: "baseUri",
-            type: "text",
-            required: true,
-            description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)"
-          },
           {
             name: "organizationId",
             type: "text",
@@ -484,19 +461,23 @@ const ApiTester = () => {
     let path = currentEndpoint.path;
     const queryParams = new URLSearchParams();
     
+    // Handle Meraki baseUri if present
+    if (selectedIntegration === 'meraki' && paramValues.baseUri) {
+      // Add baseUri as a query parameter for Meraki API
+      queryParams.append('baseUri', paramValues.baseUri);
+      // Also add it as a header
+      headers['X-Meraki-Base-URI'] = paramValues.baseUri;
+    }
+    
+    // Process regular path parameters
     Object.keys(paramValues).forEach(paramName => {
-      // Handle baseUri parameter for Meraki API
-      if (paramName === 'baseUri' && selectedIntegration === 'meraki') {
-        // Add baseUri as a query parameter for Meraki API
-        queryParams.append('baseUri', paramValues[paramName]);
-        // Also add it as a header
-        headers['X-Meraki-Base-URI'] = paramValues[paramName];
-      } else {
-        // Replace path parameters in the format {param_name}
-        const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
-        if (pathParamRegex.test(path)) {
-          path = path.replace(pathParamRegex, paramValues[paramName]);
-        }
+      // Skip baseUri as it's handled separately
+      if (paramName === 'baseUri') return;
+      
+      // Replace path parameters in the format {param_name}
+      const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
+      if (pathParamRegex.test(path)) {
+        path = path.replace(pathParamRegex, paramValues[paramName]);
       }
     });
 
@@ -590,6 +571,38 @@ const ApiTester = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Render additional configuration form
+  const renderAdditionalConfig = () => {
+    if (!currentIntegration || !currentIntegration.additionalConfig) return null;
+    
+    return (
+      <div className="additional-config-section">
+        <h3>Additional Configuration</h3>
+        <div className="additional-config-form">
+          {Object.entries(currentIntegration.additionalConfig).map(([key, config]) => (
+            <div className="config-group" key={key}>
+              <label htmlFor={`config-${key}`}>
+                {config.name}{config.required ? ' *' : ''}
+              </label>
+              <input
+                type="text"
+                id={`config-${key}`}
+                name={key}
+                placeholder={config.description || ''}
+                value={paramValues[key] || ''}
+                onChange={handleParamChange}
+                required={config.required}
+              />
+              {config.description && (
+                <small className="help-text">{config.description}</small>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // Render authentication form
@@ -891,6 +904,8 @@ const ApiTester = () => {
           </div>
           
           {currentIntegration && renderAuthForm()}
+          
+          {currentIntegration && renderAdditionalConfig()}
           
           {currentIntegration && (
             <div className="endpoint-selector">
