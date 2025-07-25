@@ -218,6 +218,9 @@ router.get('/networks/:networkId', async (req, res, next) => {
   }
 });
 
+
+
+
 // Helper function to handle API errors
 function handleApiError(error, res, next) {
   console.log('Error occurred while making API request:');
