@@ -429,7 +429,22 @@ const integrations = {
             description: "Action Batch ID"
           }
         ]
-      }
+      },
+      {
+        id: "getAlertProfiles",
+        name: "Get Alert Profiles",
+        method: "GET",
+        path: "/organizations/{organizationId}/alerts/profiles",
+        description: "Retrieve Alert Profiles",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
     ]
   }
 };
