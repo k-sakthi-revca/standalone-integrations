@@ -445,6 +445,81 @@ const integrations = {
           }
         ]
       },
+      {
+        id: "getAlertSettings",
+        name: "Get Alert Settings",
+        method: "GET",
+        path: "/networks/{networkId}/alerts/settings",
+        description: "Retrieve Alert Settings",
+        parameters: [
+          {
+            name: "networkId",
+            type: "text",
+            required: true,
+            description: "Network ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationAssuranceAlerts",
+        name: "Get Organization Assurance Alerts",
+        method: "GET",
+        path: "/organizations/{organizationId}/assurance/alerts",
+        description: "Retrieve a list of assurance alerts for the organization.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationAssuranceAlertsOverview",
+        name: "Get Organization Assurance Alerts Overview",
+        method: "GET",
+        path: "/organizations/{organizationId}/assurance/alerts/overview",
+        description: "Retrieve an overview of assurance alerts for the organization.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getAlertProfiles",
+        name: "Get Alert Profiles",
+        method: "GET",
+        path: "/organizations/{organizationId}/alerts/profiles",
+        description: "Retrieve Alert Profiles",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationAssuranceAlertsOverviewByNetwork",
+        name: "Get Organization Assurance Alerts Overview By Network",
+        method: "GET",
+        path: "/organizations/{organizationId}/assurance/alerts/overview/byNetwork",
+        description: "Retrieve an overview of assurance alerts categorized by network.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      }
     ]
   }
 };
@@ -462,8 +537,8 @@ const ApiTester = () => {
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
-  const currentEndpoint = currentIntegration && selectedEndpoint 
-    ? currentIntegration.endpoints.find(e => e.id === selectedEndpoint) 
+  const currentEndpoint = currentIntegration && selectedEndpoint
+    ? currentIntegration.endpoints.find(e => e.id === selectedEndpoint)
     : null;
 
   // Reset parameters when endpoint changes
@@ -506,7 +581,7 @@ const ApiTester = () => {
   // Execute API request
   const executeRequest = async (e) => {
     e.preventDefault();
-    
+
     if (!currentIntegration || !currentEndpoint) {
       setError('Please select an integration and endpoint.');
       return;
@@ -516,11 +591,11 @@ const ApiTester = () => {
     const headers = {
       'Content-Type': 'application/json'
     };
-    
+
     // Process path parameters
     let path = currentEndpoint.path;
     const queryParams = new URLSearchParams();
-    
+
     // Handle Meraki baseUri if present
     if (selectedIntegration === 'meraki' && paramValues.baseUri) {
       // Add baseUri as a query parameter for Meraki API
@@ -528,12 +603,12 @@ const ApiTester = () => {
       // Also add it as a header
       headers['X-Meraki-Base-URI'] = paramValues.baseUri;
     }
-    
+
     // Process regular path parameters
     Object.keys(paramValues).forEach(paramName => {
       // Skip baseUri as it's handled separately
       if (paramName === 'baseUri') return;
-      
+
       // Replace path parameters in the format {param_name}
       const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
       if (pathParamRegex.test(path)) {
@@ -601,10 +676,10 @@ const ApiTester = () => {
       if (queryString) {
         url += `?${queryString}`;
       }
-      
+
       // Make the API call
       const res = await fetch(url, options);
-      
+
       // Parse the response
       let data;
       const contentType = res.headers.get('content-type');
@@ -613,7 +688,7 @@ const ApiTester = () => {
       } else {
         data = await res.text();
       }
-      
+
       // Format the response
       setResponse({
         status: res.status,
@@ -623,7 +698,7 @@ const ApiTester = () => {
         method: currentEndpoint.method,
         data: data
       });
-      
+
       // Switch to response tab
       setActiveTab('response');
     } catch (err) {
@@ -636,7 +711,7 @@ const ApiTester = () => {
   // Render additional configuration form
   const renderAdditionalConfig = () => {
     if (!currentIntegration || !currentIntegration.additionalConfig) return null;
-    
+
     return (
       <div className="additional-config-section">
         <h3>Additional Configuration</h3>
@@ -693,7 +768,7 @@ const ApiTester = () => {
               </small>
             </div>
           )}
-          
+
           {type === 'basic' && (
             <>
               <div className="auth-group">
@@ -722,7 +797,7 @@ const ApiTester = () => {
               </div>
             </>
           )}
-          
+
           {type !== 'apiKey' && type !== 'basic' && (
             <p>Authentication type "{type}" is not fully implemented in this demo.</p>
           )}
@@ -734,19 +809,19 @@ const ApiTester = () => {
   // Render parameter form
   const renderParamForm = () => {
     if (!currentEndpoint) return null;
-    
+
     const { parameters } = currentEndpoint;
-    
+
     if (parameters.length === 0) {
       return <p>No parameters required for this endpoint.</p>;
     }
-    
+
     return parameters.map(param => (
       <div className="param-group" key={param.name}>
         <label htmlFor={`param-${param.name}`}>
           {param.name}{param.required ? ' *' : ''}
         </label>
-        
+
         {param.type === 'select' ? (
           <select
             id={`param-${param.name}`}
@@ -790,7 +865,7 @@ const ApiTester = () => {
             required={param.required}
           />
         )}
-        
+
         {param.description && (
           <small className="help-text">{param.description}</small>
         )}
@@ -802,28 +877,28 @@ const ApiTester = () => {
   const JSONViewer = ({ data }) => {
     const renderValue = useCallback((value, path = '', level = 0) => {
       const indent = '  '.repeat(level);
-      
+
       if (value === null) {
         return <span className="json-null">null</span>;
       }
-      
+
       if (typeof value === 'boolean') {
         return <span className="json-boolean">{value.toString()}</span>;
       }
-      
+
       if (typeof value === 'number') {
         return <span className="json-number">{value}</span>;
       }
-      
+
       if (typeof value === 'string') {
         return <span className="json-string">"{value}"</span>;
       }
-      
+
       if (Array.isArray(value)) {
         if (value.length === 0) {
           return <span className="json-mark">[]</span>;
         }
-        
+
         return (
           <div style={{ textAlign: 'left' }}>
             <span className="json-mark">[</span>
@@ -841,14 +916,14 @@ const ApiTester = () => {
           </div>
         );
       }
-      
+
       if (typeof value === 'object') {
         const keys = Object.keys(value);
-        
+
         if (keys.length === 0) {
-          return <span className="json-mark">{}</span>;
+          return <span className="json-mark">{ }</span>;
         }
-        
+
         return (
           <div style={{ textAlign: 'left' }}>
             <span className="json-mark">{'{'}</span>
@@ -868,45 +943,45 @@ const ApiTester = () => {
           </div>
         );
       }
-      
+
       return <span>{String(value)}</span>;
     }, []);
-    
+
     return (
       <div className="json-viewer" style={{ textAlign: 'left' }}>
         {renderValue(data, 'root')}
       </div>
     );
   };
-  
+
   // Render response tabs
   const renderResponseTabs = () => {
     if (!response) return null;
-    
+
     return (
       <div className="results-container">
         <h2>Results</h2>
         <div className="results-tabs">
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'response' ? 'active' : ''}`}
             onClick={() => setActiveTab('response')}
           >
             Response
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'headers' ? 'active' : ''}`}
             onClick={() => setActiveTab('headers')}
           >
             Headers
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'raw' ? 'active' : ''}`}
             onClick={() => setActiveTab('raw')}
           >
             Raw
           </button>
         </div>
-        
+
         <div className="tab-content">
           <div className={`tab-pane ${activeTab === 'response' ? 'active' : ''}`}>
             <JSONViewer data={response.data} />
@@ -940,16 +1015,16 @@ const ApiTester = () => {
       <div className="api-container">
         <div className="api-controls">
           <h2>API Controls</h2>
-          
+
           {error && (
             <div className="error">
               {error}
             </div>
           )}
-          
+
           <div className="integration-selector">
             <label htmlFor="integration-dropdown">Select Integration:</label>
-            <select 
+            <select
               id="integration-dropdown"
               value={selectedIntegration}
               onChange={handleIntegrationChange}
@@ -962,15 +1037,15 @@ const ApiTester = () => {
               ))}
             </select>
           </div>
-          
+
           {currentIntegration && renderAuthForm()}
-          
+
           {currentIntegration && renderAdditionalConfig()}
-          
+
           {currentIntegration && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
-              <select 
+              <select
                 id="endpoint-select"
                 value={selectedEndpoint}
                 onChange={handleEndpointChange}
@@ -985,7 +1060,7 @@ const ApiTester = () => {
               </select>
             </div>
           )}
-          
+
           {currentEndpoint && (
             <div className="parameters-container">
               <h3>Parameters</h3>
@@ -993,9 +1068,9 @@ const ApiTester = () => {
                 <div className="params-form">
                   {renderParamForm()}
                 </div>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   className="btn execute-btn"
                   disabled={loading}
                 >
@@ -1005,7 +1080,7 @@ const ApiTester = () => {
             </div>
           )}
         </div>
-        
+
         {renderResponseTabs()}
       </div>
     </div>

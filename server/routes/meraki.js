@@ -218,7 +218,112 @@ router.get('/networks/:networkId', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /organizations/{organizationId}/alerts/profiles
+ * Get Organization Alerts Profiles
+ */
+router.get('/organizations/:organizationId/alerts/profiles', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+    
+    // Make API call to Meraki
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/alerts/profiles`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
 
+/**
+ * GET /networks/{networkId}/alerts/settings
+ * Get Network Alerts Settings
+ */
+router.get('/networks/:networkId/alerts/settings', async (req, res, next) => {
+  try {
+    const { networkId } = req.params;
+    
+    // Make API call to Meraki
+    const response = await axios.get(`${req.query.baseUri}/api/v1/networks/${networkId}/alerts/settings`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/assurance/alerts
+ * Get Organization Assurance Alerts
+ */
+router.get('/organizations/:organizationId/assurance/alerts', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/assurance/alerts`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/assurance/alerts/overview
+ * Get Organization Assurance Alerts Overview
+ */
+router.get('/organizations/:organizationId/assurance/alerts/overview', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/assurance/alerts/overview`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/assurance/alerts/overview/byNetwork
+ * Get Organization Assurance Alerts Overview By Network
+ */
+router.get('/organizations/:organizationId/assurance/alerts/overview/byNetwork', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/assurance/alerts/overview/byNetwork`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
 
 
 // Helper function to handle API errors
