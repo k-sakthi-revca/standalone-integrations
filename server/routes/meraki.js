@@ -325,6 +325,239 @@ router.get('/organizations/:organizationId/assurance/alerts/overview/byNetwork',
   }
 });
 
+/**
+ * GET /organizations/:organizationId/brandingPolicies
+ * Get Organization Branding Policies
+ */
+router.get('/organizations/:organizationId/brandingPolicies', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/brandingPolicies`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/brandingPolicies/:brandingPolicyId
+ * Get Organization Branding Policy
+ */
+router.get('/organizations/:organizationId/brandingPolicies/:brandingPolicyId', async (req, res, next) => {
+  try {
+    const { organizationId, brandingPolicyId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/brandingPolicies/${brandingPolicyId}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/brandingPolicies/priorities
+ * Get Organization Branding Policies Priorities
+ */
+router.get('/organizations/:organizationId/brandingPolicies/priorities', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/brandingPolicies/priorities`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /devices/:serial/cellular/sims
+ * Get Device Cellular Sims
+ */
+router.get('/devices/:serial/cellular/sims', async (req, res, next) => {
+  try {
+    const { serial } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/devices/${serial}/cellular/sims`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/clients/search
+ * Get Organization Clients Search
+ */
+router.get('/organizations/:organizationId/clients/search', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+    const queryParams = req.query;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/clients/search`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      },
+      params: queryParams
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /networks/:networkId/clients/:clientId/policy
+ * Get Network Client Policy
+ */
+router.get('/networks/:networkId/clients/:clientId/policy', async (req, res, next) => {
+  try {
+    const { networkId, clientId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/networks/${networkId}/clients/${clientId}/policy`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/licenses
+ * Get Organization Licenses
+ */
+router.get('/organizations/:organizationId/licenses', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/licenses`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/licenses/:licenseId
+ * Get Organization License
+ */
+router.get('/organizations/:organizationId/licenses/:licenseId', async (req, res, next) => {
+  try {
+    const { organizationId, licenseId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/licenses/${licenseId}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/loginSecurity
+ * Get Organization Login Security
+ */
+router.get('/organizations/:organizationId/loginSecurity', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/loginSecurity`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /networks/:networkId/trafficAnalysis
+ * Get Network Traffic Analysis
+ */
+router.get('/networks/:networkId/trafficAnalysis', async (req, res, next) => {
+  try {
+    const { networkId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/networks/${networkId}/trafficAnalysis`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /networks/:networkId/syslogServers
+ * Get Network Syslog Servers
+ */
+router.get('/networks/:networkId/syslogServers', async (req, res, next) => {
+  try {
+    const { networkId } = req.params;
+
+    const response = await axios.get(`${req.query.baseUri}/api/v1/networks/${networkId}/syslogServers`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
 
 // Helper function to handle API errors
 function handleApiError(error, res, next) {

@@ -519,6 +519,189 @@ const integrations = {
             description: "Organization ID"
           }
         ]
+      },
+      {
+        id: "getOrganizationBrandingPolicies",
+        name: "Get Organization Branding Policies",
+        method: "GET",
+        path: "/organizations/{organizationId}/brandingPolicies",
+        description: "Retrieve branding policies for an organization.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationBrandingPolicy",
+        name: "Get Organization Branding Policy",
+        method: "GET",
+        path: "/organizations/{organizationId}/brandingPolicies/{brandingPolicyId}",
+        description: "Retrieve a specific branding policy by ID.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          },
+          {
+            name: "brandingPolicyId",
+            type: "text",
+            required: true,
+            description: "Branding Policy ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationBrandingPoliciesPriorities",
+        name: "Get Organization Branding Policies Priorities",
+        method: "GET",
+        path: "/organizations/{organizationId}/brandingPolicies/priorities",
+        description: "Retrieve the priority list of branding policies.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getDeviceCellularSims",
+        name: "Get Device Cellular Sims",
+        method: "GET",
+        path: "/devices/{serial}/cellular/sims",
+        description: "Retrieve SIM information for a device with cellular connectivity.",
+        parameters: [
+          {
+            name: "serial",
+            type: "text",
+            required: true,
+            description: "Device serial number"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationClientsSearch",
+        name: "Get Organization Clients Search",
+        method: "GET",
+        path: "/organizations/{organizationId}/clients/search",
+        description: "Search for clients across an organization using filters like MAC address or IP.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getNetworkClientPolicy",
+        name: "Get Network Client Policy",
+        method: "GET",
+        path: "/networks/{networkId}/clients/{clientId}/policy",
+        description: "Retrieve the policy assigned to a client on a network.",
+        parameters: [
+          {
+            name: "networkId",
+            type: "text",
+            required: true,
+            description: "Network ID"
+          },
+          {
+            name: "clientId",
+            type: "text",
+            required: true,
+            description: "Client ID (usually MAC address)"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationLicenses",
+        name: "Get Organization Licenses",
+        method: "GET",
+        path: "/organizations/{organizationId}/licenses",
+        description: "Retrieve all licenses for the organization.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationLicense",
+        name: "Get Organization License",
+        method: "GET",
+        path: "/organizations/{organizationId}/licenses/{licenseId}",
+        description: "Retrieve details of a specific license by ID.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          },
+          {
+            name: "licenseId",
+            type: "text",
+            required: true,
+            description: "License ID"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationLoginSecurity",
+        name: "Get Organization Login Security",
+        method: "GET",
+        path: "/organizations/{organizationId}/loginSecurity",
+        description: "Retrieve login security settings for the organization.",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getNetworkTrafficAnalysis",
+        name: "Get Network Traffic Analysis",
+        method: "GET",
+        path: "/networks/{networkId}/trafficAnalysis",
+        description: "Retrieve traffic analysis settings for a network.",
+        parameters: [
+          {
+            name: "networkId",
+            type: "text",
+            required: true,
+            description: "Network ID"
+          }
+        ]
+      },
+      {
+        id: "getNetworkSyslogServers",
+        name: "Get Network Syslog Servers",
+        method: "GET",
+        path: "/networks/{networkId}/syslogServers",
+        description: "Retrieve syslog server settings for a network.",
+        parameters: [
+          {
+            name: "networkId",
+            type: "text",
+            required: true,
+            description: "Network ID"
+          }
+        ]
       }
     ]
   }
@@ -541,10 +724,16 @@ const ApiTester = () => {
     ? currentIntegration.endpoints.find(e => e.id === selectedEndpoint)
     : null;
 
-  // Reset parameters when endpoint changes
+  // Reset parameters when endpoint changes, but preserve baseUri for Meraki
   useEffect(() => {
-    setParamValues({});
-  }, [selectedEndpoint]);
+    // If it's the Meraki integration and baseUri exists, preserve it
+    if (selectedIntegration === 'meraki' && paramValues.baseUri) {
+      const baseUri = paramValues.baseUri;
+      setParamValues({ baseUri });
+    } else {
+      setParamValues({});
+    }
+  }, [selectedEndpoint, selectedIntegration, paramValues.baseUri]);
 
   // Handle integration selection
   const handleIntegrationChange = (e) => {
