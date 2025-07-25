@@ -1,6 +1,102 @@
 const express = require('express');
 const axios = require('axios');
+const qs = require('qs');
+const cookieParser = require('cookie-parser');
+require('dotenv').config();
+
 const router = express.Router();
+
+const {
+  MERAKI_CLIENT_ID,
+  MERAKI_CLIENT_SECRET,
+  MERAKI_REDIRECT_URI,
+  MERAKI_SCOPES
+} = process.env;
+
+// Required to handle cookies
+router.use(cookieParser());
+
+/**
+ * GET /auth/meraki
+ * Redirect user to Cisco Meraki OAuth consent page
+ * Accepts ?frontEndUrl=https://your-frontend.com
+ */
+router.get('/auth/meraki', (req, res) => {
+  const { frontEndUrl } = req.query;
+
+  if (!frontEndUrl) {
+    return res.status(400).json({ error: 'Missing frontEndUrl in query params' });
+  }
+
+  const state = Math.random().toString(36).substring(2, 15); // Optional CSRF protection
+  const authorizeUrl = `https://as.meraki.com/oauth/authorize?response_type=code&client_id=${MERAKI_CLIENT_ID}&redirect_uri=${encodeURIComponent(MERAKI_REDIRECT_URI)}&scope=${encodeURIComponent(MERAKI_SCOPES)}&state=${state}`;
+
+  // Set cookie for redirect after callback
+  res.cookie('frontEndUrl', frontEndUrl, {
+    httpOnly: true,
+    secure: false, // set true in production with HTTPS
+    maxAge: 10 * 60 * 1000 // 10 mins
+  });
+
+  res.redirect(authorizeUrl);
+});
+
+/**
+ * GET /auth/meraki/callback
+ * Handle OAuth callback and print token, then redirect to frontEndUrl
+ */
+router.get('/meraki/callback', async (req, res) => {
+  console.log("here")
+  const { code, error } = req.query;
+  const frontEndUrl = req.cookies.frontEndUrl;
+  console.log("frontEndUrl",frontEndUrl)
+
+  if (error) {
+    return res.status(400).send('Access denied or OAuth error');
+  }
+
+  if (!code) {
+    return res.status(400).send('Missing authorization code');
+  }
+
+  if (!frontEndUrl) {
+    return res.status(400).send('Missing frontEndUrl cookie');
+  }
+
+  try {
+    const tokenUrl = 'https://as.meraki.com/oauth/token';
+
+    const payload = qs.stringify({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: MERAKI_REDIRECT_URI,
+      scope: MERAKI_SCOPES
+    });
+
+    const tokenResponse = await axios.post(tokenUrl, payload, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      auth: {
+        username: MERAKI_CLIENT_ID,
+        password: MERAKI_CLIENT_SECRET
+      }
+    });
+
+    const { access_token, refresh_token, expires_in } = tokenResponse.data;
+
+    // ✅ Just print tokens (not sending to client)
+    console.log('Meraki OAuth Tokens:');
+    console.log({ access_token, refresh_token, expires_in });
+
+    // ✅ Clear the cookie and redirect to frontend
+    res.clearCookie('frontEndUrl');
+    return res.redirect(frontEndUrl);
+  } catch (err) {
+    console.error('OAuth callback error:', err.response?.data || err.message);
+    return res.status(500).send('Token exchange failed');
+  }
+});
 
 // Middleware to handle API key authentication
 const authenticateApiKey = (req, res, next) => {

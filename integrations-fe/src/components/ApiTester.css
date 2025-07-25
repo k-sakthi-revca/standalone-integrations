@@ -82,6 +82,50 @@ select:focus, input:focus, textarea:focus {
   margin-bottom: 15px;
 }
 
+/* Auth method selector styles */
+.auth-method-selector {
+  margin-bottom: 20px;
+}
+
+.auth-method-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.auth-method-options label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.auth-method-options input[type="radio"] {
+  width: auto;
+  margin-right: 8px;
+  margin-bottom: 0;
+}
+
+/* OAuth connect button styles */
+.oauth-connect {
+  margin: 20px 0;
+}
+
+.oauth-btn {
+  background-color: #1a73e8;
+  width: 100%;
+  max-width: 250px;
+  padding: 12px 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oauth-btn:hover {
+  background-color: #0d62d1;
+}
+
 .btn {
   background-color: #4a90e2;
   color: white;

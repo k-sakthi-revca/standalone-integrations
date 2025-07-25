@@ -717,6 +717,7 @@ const ApiTester = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('response');
+  const [merakiAuthMethod, setMerakiAuthMethod] = useState('api'); // 'api' or 'oauth'
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -737,11 +738,33 @@ const ApiTester = () => {
 
   // Handle integration selection
   const handleIntegrationChange = (e) => {
-    setSelectedIntegration(e.target.value);
+    const integration = e.target.value;
+    setSelectedIntegration(integration);
     setSelectedEndpoint('');
     setAuthData({});
     setResponse(null);
     setError('');
+    
+    // Reset Meraki auth method to API by default when changing integrations
+    if (integration === 'meraki') {
+      setMerakiAuthMethod('api');
+    }
+  };
+  
+  // Handle Meraki auth method change
+  const handleMerakiAuthMethodChange = (method) => {
+    setMerakiAuthMethod(method);
+    // Clear any previous auth data when switching methods
+    setAuthData({});
+  };
+  
+  // Handle OAuth connect button click
+  const handleOAuthConnect = () => {
+    // Get the current frontend URL to redirect back to after OAuth
+    const frontEndUrl = window.location.origin;
+    
+    // Redirect to the Meraki OAuth route with frontEndUrl as a query parameter
+    window.location.href = `http://localhost:5000/api/meraki/auth/meraki?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
   };
 
   // Handle endpoint selection
@@ -931,8 +954,78 @@ const ApiTester = () => {
 
   // Render authentication form
   const renderAuthForm = () => {
-    if (!currentIntegration || !currentIntegration.auth) return null;
-
+    if (!currentIntegration) return null;
+    
+    // Special handling for Meraki to show auth method selection
+    if (selectedIntegration === 'meraki') {
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="merakiAuthMethod"
+                  value="api"
+                  checked={merakiAuthMethod === 'api'}
+                  onChange={() => handleMerakiAuthMethodChange('api')}
+                />
+                API Key
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="merakiAuthMethod"
+                  value="oauth"
+                  checked={merakiAuthMethod === 'oauth'}
+                  onChange={() => handleMerakiAuthMethodChange('oauth')}
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          {merakiAuthMethod === 'oauth' ? (
+            <div className="oauth-connect">
+              <button 
+                className="btn oauth-btn"
+                onClick={handleOAuthConnect}
+              >
+                Connect with Meraki
+              </button>
+              <small className="help-text">
+                Click to authenticate with your Meraki account using OAuth.
+              </small>
+            </div>
+          ) : (
+            <div className="auth-form">
+              <div className="auth-group">
+                <label htmlFor="auth-token">API Token *</label>
+                <input
+                  type="password"
+                  id="auth-token"
+                  name="token"
+                  placeholder="Enter your API token"
+                  value={authData.token || ''}
+                  onChange={handleAuthChange}
+                  required
+                />
+                <small className="help-text">
+                  This token will be used in the {currentIntegration.auth.keyName} header.
+                </small>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // Default auth form for other integrations
+    if (!currentIntegration.auth) return null;
+    
     const { type, keyName, valuePrefix } = currentIntegration.auth;
 
     return (
@@ -1229,16 +1322,16 @@ const ApiTester = () => {
 
           {currentIntegration && renderAuthForm()}
 
-          {currentIntegration && renderAdditionalConfig()}
+          {currentIntegration && selectedIntegration === 'meraki' && merakiAuthMethod === 'api' && renderAdditionalConfig()}
 
-          {currentIntegration && (
+          {currentIntegration && (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
               <select
                 id="endpoint-select"
                 value={selectedEndpoint}
                 onChange={handleEndpointChange}
-                disabled={!currentIntegration}
+                disabled={!currentIntegration || (selectedIntegration === 'meraki' && merakiAuthMethod === 'oauth')}
               >
                 <option value="" disabled>Select Endpoint</option>
                 {currentIntegration.endpoints.map(endpoint => (
@@ -1250,7 +1343,7 @@ const ApiTester = () => {
             </div>
           )}
 
-          {currentEndpoint && (
+          {currentEndpoint && (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>
