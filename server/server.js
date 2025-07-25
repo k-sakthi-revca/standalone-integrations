@@ -12,6 +12,24 @@ const merakiRoutes = require('./routes/meraki');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Apply express.raw() *only* to the webhook route
+app.post('/api/meraki/webhook', express.raw({ type: '*/*' }), (req, res) => {
+  const SHARED_SECRET = "193296e25da6f13d794296adf525b0b49e42f664"; // ✅ move to .env in production
+  const rawBody = req.body.toString(); // raw buffer to string
+  // Parse it into an object
+  const parsedBody = JSON.parse(rawBody);
+
+  // Now access sharedSecret
+  const sharedSecret = parsedBody.sharedSecret;
+
+  if (sharedSecret === SHARED_SECRET) {
+    console.log("✅ Signature verified.");
+    res.sendStatus(200);
+  } else {
+    console.log("❌ Signature mismatch.");
+    res.sendStatus(403);
+  }
+});
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -33,22 +51,6 @@ app.get('/api/test', (req, res) => {
 // API Routes
 app.use('/api/securityscorecards', securityScorecardsRoutes);
 app.use('/api/meraki', merakiRoutes);
-
-app.post('/api/meraki/webhook', (req, res) => {
-  const secret = "193296e25da6f13d794296adf525b0b49e42f664"; // Store in .env
-  const signature = req.headers['x-cisco-meraki-signature'];
-  const body = JSON.stringify(req.body);
-  const hmac = crypto.createHmac('sha1', secret).update(body).digest('hex');
-
-  if (signature === hmac) {
-    console.log("✅ Signature Verified");
-    // Process webhook
-    res.sendStatus(200);
-  } else {
-    console.log("❌ Invalid signature");
-    res.sendStatus(403);
-  }
-});
 
 
 // Check if the React build directory exists
