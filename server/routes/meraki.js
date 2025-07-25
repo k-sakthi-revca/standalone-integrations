@@ -152,6 +152,72 @@ router.get('/organizations/:organizationId/actionBatches/:actionBatchId', async 
   }
 });
 
+/**
+ * GET /devices/:serial
+ * Get a specific device
+ */
+router.get('/devices/:serial', async (req, res, next) => {
+  try {
+    const { serial } = req.params;
+    
+    // Make API call to Meraki
+    const response = await axios.get(`${req.query.baseUri}/api/v1/devices/${serial}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /organizations/:organizationId/networks
+ * Get Organization networks
+ */
+router.get('/organizations/:organizationId/networks', async (req, res, next) => {
+  try {
+    const { organizationId } = req.params;
+    
+    // Make API call to Meraki
+    const response = await axios.get(`${req.query.baseUri}/api/v1/organizations/${organizationId}/networks`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
+/**
+ * GET /networks/:networkId
+ * Get a specific network
+ */
+router.get('/networks/:networkId', async (req, res, next) => {
+  try {
+    const { networkId } = req.params;
+    
+    // Make API call to Meraki
+    const response = await axios.get(`${req.query.baseUri}/api/v1/networks/${networkId}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Cisco-Meraki-API-Key': req.body.apiKey
+      }
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    handleApiError(error, res, next);
+  }
+});
+
 // Helper function to handle API errors
 function handleApiError(error, res, next) {
   console.log('Error occurred while making API request:');

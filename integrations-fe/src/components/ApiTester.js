@@ -350,6 +350,51 @@ const integrations = {
         ]
       },
       {
+        id: "getDevice",
+        name: "Get Device",
+        method: "GET",
+        path: "/devices/{serial}",
+        description: "Retrieve a specific device by serial number",
+        parameters: [
+          {
+            name: "serial",
+            type: "text",
+            required: true,
+            description: "Device Serial Number"
+          }
+        ]
+      },
+      {
+        id: "getOrganizationNetworks",
+        name: "Get Organization Networks",
+        method: "GET",
+        path: "/organizations/{organizationId}/networks",
+        description: "Retrieve networks in a specific organization",
+        parameters: [
+          {
+            name: "organizationId",
+            type: "text",
+            required: true,
+            description: "Organization ID"
+          }
+        ]
+      },
+      {
+        id: "getNetwork",
+        name: "Get Network",
+        method: "GET",
+        path: "/networks/{networkId}",
+        description: "Retrieve a specific network",
+        parameters: [
+          {
+            name: "networkId",
+            type: "text",
+            required: true,
+            description: "Network ID"
+          }
+        ]
+      },
+      {
         id: "getOrganizationActionBatches",
         name: "Get Organization Action Batches",
         method: "GET",
