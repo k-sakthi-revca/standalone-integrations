@@ -218,7 +218,11 @@ const ApiTester = () => {
     // Add auth header if specified
     if (currentIntegration.auth) {
       const { type, keyName, valuePrefix } = currentIntegration.auth;
-      if (type === 'apiKey' && keyName) {
+      
+      // Skip auth check for Cisco DNA as we're using token from localStorage
+      if (selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) {
+        // Auth is handled via token from localStorage
+      } else if (type === 'apiKey' && keyName) {
         if (authData.token) {
           const tokenValue = valuePrefix ? `${valuePrefix}${authData.token}` : authData.token;
           headers[keyName] = tokenValue;
@@ -243,6 +247,14 @@ const ApiTester = () => {
       if (token) {
         headers['X-Auth-Token'] = token;
       }
+      
+      // Add baseUrl as a query parameter for all Cisco DNA endpoints
+      const baseUrl = localStorage.getItem('ciscoDnaBaseUrl');
+      if (baseUrl) {
+        queryParams.append('baseUrl', baseUrl);
+        // Also add token as a query parameter
+        queryParams.append('token', token);
+      }
     }
 
     // Prepare request options
@@ -261,11 +273,8 @@ const ApiTester = () => {
         }
       });
 
-      // Special handling for Cisco DNA network-devices endpoint
-      if (selectedIntegration === 'ciscoDna' && currentEndpoint.id === 'getNetworkDevices') {
-        bodyParams.baseUrl = localStorage.getItem('ciscoDnaBaseUrl');
-        bodyParams.token = localStorage.getItem('ciscoDnaToken');
-      }
+      // We no longer need special handling for Cisco DNA network-devices endpoint
+      // as we're passing token and baseUrl as query parameters for all Cisco DNA endpoints
 
       if (Object.keys(bodyParams).length > 0) {
         options.body = JSON.stringify(bodyParams);
