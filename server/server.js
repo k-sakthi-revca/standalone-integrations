@@ -7,6 +7,7 @@ const crypto = require('crypto');
 // Import routes
 const securityScorecardsRoutes = require('./routes/securityscorecards');
 const merakiRoutes = require('./routes/meraki');
+const ciscoDnaRoutes = require('./routes/cisco-dna');
 
 // Initialize express app
 const app = express();
@@ -51,7 +52,7 @@ app.get('/api/test', (req, res) => {
 // API Routes
 app.use('/api/securityscorecards', securityScorecardsRoutes);
 app.use('/api/meraki', merakiRoutes);
-
+app.use('/api/cisco-dna', ciscoDnaRoutes);
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');
