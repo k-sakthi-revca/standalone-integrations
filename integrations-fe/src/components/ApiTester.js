@@ -1,711 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './ApiTester.css';
-
-// Integration configurations
-const integrations = {
-  securityscorecard: {
-    name: "SecurityScorecard",
-    baseUrl: "http://localhost:5000/api/securityscorecards", // Using our backend server
-    auth: {
-      type: "apiKey",
-      keyName: "Authorization",
-      valuePrefix: "Token ",
-    },
-    headers: {
-      "Accept": "application/json"
-    },
-    endpoints: [
-      {
-        id: "getPortfolios",
-        name: "Get Portfolios",
-        method: "GET",
-        path: "/portfolios",
-        description: "Retrieve all portfolios",
-        parameters: []
-      },
-      {
-        id: "getPortfolioCompanies",
-        name: "Get Portfolio Companies",
-        method: "GET",
-        path: "/portfolios/{portfolio_id}/companies",
-        description: "Retrieve companies in a specific portfolio",
-        parameters: [
-          {
-            name: "portfolio_id",
-            type: "text",
-            required: true,
-            description: "Portfolio ID"
-          }
-        ]
-      },
-      {
-        id: "getFollowedCompanies",
-        name: "Get Followed Companies",
-        method: "GET",
-        path: "/all-companies",
-        description: "Find followed companies",
-        parameters: []
-      },
-      {
-        id: "getFollowedCompanyByDomain",
-        name: "Get Followed Company by Domain",
-        method: "GET",
-        path: "/all-companies/{domain}",
-        description: "Get followed company by domain",
-        parameters: [
-          {
-            name: "domain",
-            type: "text",
-            required: true,
-            description: "Company domain (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getScorecardNotes",
-        name: "Get Scorecard Notes",
-        method: "GET",
-        path: "/scorecard-notes/{domain}",
-        description: "Find scorecard notes for a company",
-        parameters: [
-          {
-            name: "domain",
-            type: "text",
-            required: true,
-            description: "Company domain (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getScorecardTags",
-        name: "Get Scorecard Tags",
-        method: "GET",
-        path: "/scorecard-tags",
-        description: "Get all scorecard tags",
-        parameters: []
-      },
-      {
-        id: "getTagCompanies",
-        name: "Get Companies by Tag",
-        method: "GET",
-        path: "/scorecard-tags/{id}/companies",
-        description: "Get all companies associated with a scorecard tag",
-        parameters: [
-          {
-            name: "id",
-            type: "text",
-            required: true,
-            description: "Tag ID"
-          }
-        ]
-      },
-      {
-        id: "getTagGroups",
-        name: "Get Tag Groups",
-        method: "GET",
-        path: "/scorecard-tags/groups",
-        description: "Get all scorecard tag groups",
-        parameters: []
-      },
-      {
-        id: "getTagGroup",
-        name: "Get Tag Group",
-        method: "GET",
-        path: "/scorecard-tags/groups/{id}",
-        description: "Get a specific scorecard tag group",
-        parameters: [
-          {
-            name: "id",
-            type: "text",
-            required: true,
-            description: "Tag Group ID"
-          }
-        ]
-      },
-      {
-        id: "getCompanyInfo",
-        name: "Get Company Information",
-        method: "GET",
-        path: "/companies/{scorecard_identifier}",
-        description: "Get a company information and scorecard summary",
-        parameters: [
-          {
-            name: "scorecard_identifier",
-            type: "text",
-            required: true,
-            description: "Scorecard identifier (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getCompanySummaryFactors",
-        name: "Get Company Summary & Factors",
-        method: "GET",
-        path: "/companies/{domain}/summary-factors",
-        description: "Get a company information, scorecard summary, factor scores and issue counts",
-        parameters: [
-          {
-            name: "domain",
-            type: "text",
-            required: true,
-            description: "Company domain (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getCompanyFactors",
-        name: "Get Company Factors",
-        method: "GET",
-        path: "/companies/{scorecard_identifier}/factors",
-        description: "Get a company's factor scores and issue counts",
-        parameters: [
-          {
-            name: "scorecard_identifier",
-            type: "text",
-            required: true,
-            description: "Scorecard identifier (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getCompanyHistoricalScores",
-        name: "Get Company Historical Scores",
-        method: "GET",
-        path: "/companies/{scorecard_identifier}/history/score",
-        description: "Get a company's historical scores",
-        parameters: [
-          {
-            name: "scorecard_identifier",
-            type: "text",
-            required: true,
-            description: "Scorecard identifier (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getCompanyHistoricalFactorScores",
-        name: "Get Company Historical Factor Scores",
-        method: "GET",
-        path: "/companies/{scorecard_identifier}/history/factors/score",
-        description: "Get a company's historical factor scores",
-        parameters: [
-          {
-            name: "scorecard_identifier",
-            type: "text",
-            required: true,
-            description: "Scorecard identifier (e.g., example.com)"
-          }
-        ]
-      },
-      {
-        id: "getIndustryScore",
-        name: "Get Industry Score",
-        method: "GET",
-        path: "/industries/{industry}/score",
-        description: "Get score for the industry",
-        parameters: [
-          {
-            name: "industry",
-            type: "text",
-            required: true,
-            description: "Industry name (e.g., Technology, Finance, Healthcare)"
-          }
-        ]
-      },
-      {
-        id: "getIndustryHistoricalScores",
-        name: "Get Industry Historical Scores",
-        method: "GET",
-        path: "/industries/{industry}/history/score",
-        description: "Get an industry's historical scores",
-        parameters: [
-          {
-            name: "industry",
-            type: "text",
-            required: true,
-            description: "Industry name (e.g., Technology, Finance, Healthcare)"
-          }
-        ]
-      },
-      {
-        id: "getCompanyActiveIssues",
-        name: "Get Company Active Issues",
-        method: "GET",
-        path: "/companies/{scorecard_identifier}/active-issues",
-        description: "Get a company's active issues",
-        parameters: [
-          {
-            name: "scorecard_identifier",
-            type: "text",
-            required: true,
-            description: "Scorecard identifier (e.g., example.com)"
-          }
-        ]
-      }
-    ]
-  },
-  axonius: {
-    name: "Axonius",
-    baseUrl: "http://localhost:5000/api/axonius", // Replace with actual API URL
-    auth: {
-      type: "apiKey",
-      keyName: "api-key",
-    },
-    endpoints: [
-      {
-        id: "getDevices",
-        name: "Get Devices",
-        method: "GET",
-        path: "/devices",
-        description: "Retrieve a list of devices",
-        parameters: [
-          {
-            name: "limit",
-            type: "number",
-            required: false,
-            default: 10,
-            description: "Number of results to return"
-          },
-          {
-            name: "filter",
-            type: "text",
-            required: false,
-            description: "Filter criteria in JSON format"
-          }
-        ]
-      },
-      {
-        id: "getUsers",
-        name: "Get Users",
-        method: "GET",
-        path: "/users",
-        description: "Retrieve a list of users",
-        parameters: [
-          {
-            name: "limit",
-            type: "number",
-            required: false,
-            default: 10,
-            description: "Number of results to return"
-          }
-        ]
-      }
-    ]
-  },
-  meraki: {
-    name: "Cisco Meraki",
-    baseUrl: "http://localhost:5000/api/meraki",
-    auth: {
-      type: "apiKey",
-      keyName: "X-Cisco-Meraki-API-Key",
-    },
-    headers: {
-      "Accept": "application/json"
-    },
-    // Additional configuration for Meraki
-    additionalConfig: {
-      baseUri: {
-        name: "Base URI",
-        description: "Base URI (e.g., https://api.meraki.ca/api/v1, https://api.meraki.in/api/v1)",
-        required: true
-      }
-    },
-    endpoints: [
-      {
-        id: "getOrganizations",
-        name: "Get All Organizations",
-        method: "GET",
-        path: "/organizations",
-        description: "Retrieve all organizations",
-        parameters: []
-      },
-      {
-        id: "getOrganization",
-        name: "Get Organization",
-        method: "GET",
-        path: "/organizations/{organizationId}",
-        description: "Retrieve a specific organization",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationDevices",
-        name: "Get Organization Devices",
-        method: "GET",
-        path: "/organizations/{organizationId}/devices",
-        description: "Retrieve devices in a specific organization",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getDevice",
-        name: "Get Device",
-        method: "GET",
-        path: "/devices/{serial}",
-        description: "Retrieve a specific device by serial number",
-        parameters: [
-          {
-            name: "serial",
-            type: "text",
-            required: true,
-            description: "Device Serial Number"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationNetworks",
-        name: "Get Organization Networks",
-        method: "GET",
-        path: "/organizations/{organizationId}/networks",
-        description: "Retrieve networks in a specific organization",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getNetwork",
-        name: "Get Network",
-        method: "GET",
-        path: "/networks/{networkId}",
-        description: "Retrieve a specific network",
-        parameters: [
-          {
-            name: "networkId",
-            type: "text",
-            required: true,
-            description: "Network ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationActionBatches",
-        name: "Get Organization Action Batches",
-        method: "GET",
-        path: "/organizations/{organizationId}/actionBatches",
-        description: "Retrieve action batches for a specific organization",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationActionBatch",
-        name: "Get Organization Action Batch",
-        method: "GET",
-        path: "/organizations/{organizationId}/actionBatches/{actionBatchId}",
-        description: "Retrieve a specific action batch for an organization",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          },
-          {
-            name: "actionBatchId",
-            type: "text",
-            required: true,
-            description: "Action Batch ID"
-          }
-        ]
-      },
-      {
-        id: "getAlertProfiles",
-        name: "Get Alert Profiles",
-        method: "GET",
-        path: "/organizations/{organizationId}/alerts/profiles",
-        description: "Retrieve Alert Profiles",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getAlertSettings",
-        name: "Get Alert Settings",
-        method: "GET",
-        path: "/networks/{networkId}/alerts/settings",
-        description: "Retrieve Alert Settings",
-        parameters: [
-          {
-            name: "networkId",
-            type: "text",
-            required: true,
-            description: "Network ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationAssuranceAlerts",
-        name: "Get Organization Assurance Alerts",
-        method: "GET",
-        path: "/organizations/{organizationId}/assurance/alerts",
-        description: "Retrieve a list of assurance alerts for the organization.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationAssuranceAlertsOverview",
-        name: "Get Organization Assurance Alerts Overview",
-        method: "GET",
-        path: "/organizations/{organizationId}/assurance/alerts/overview",
-        description: "Retrieve an overview of assurance alerts for the organization.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getAlertProfiles",
-        name: "Get Alert Profiles",
-        method: "GET",
-        path: "/organizations/{organizationId}/alerts/profiles",
-        description: "Retrieve Alert Profiles",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationAssuranceAlertsOverviewByNetwork",
-        name: "Get Organization Assurance Alerts Overview By Network",
-        method: "GET",
-        path: "/organizations/{organizationId}/assurance/alerts/overview/byNetwork",
-        description: "Retrieve an overview of assurance alerts categorized by network.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationBrandingPolicies",
-        name: "Get Organization Branding Policies",
-        method: "GET",
-        path: "/organizations/{organizationId}/brandingPolicies",
-        description: "Retrieve branding policies for an organization.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationBrandingPolicy",
-        name: "Get Organization Branding Policy",
-        method: "GET",
-        path: "/organizations/{organizationId}/brandingPolicies/{brandingPolicyId}",
-        description: "Retrieve a specific branding policy by ID.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          },
-          {
-            name: "brandingPolicyId",
-            type: "text",
-            required: true,
-            description: "Branding Policy ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationBrandingPoliciesPriorities",
-        name: "Get Organization Branding Policies Priorities",
-        method: "GET",
-        path: "/organizations/{organizationId}/brandingPolicies/priorities",
-        description: "Retrieve the priority list of branding policies.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getDeviceCellularSims",
-        name: "Get Device Cellular Sims",
-        method: "GET",
-        path: "/devices/{serial}/cellular/sims",
-        description: "Retrieve SIM information for a device with cellular connectivity.",
-        parameters: [
-          {
-            name: "serial",
-            type: "text",
-            required: true,
-            description: "Device serial number"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationClientsSearch",
-        name: "Get Organization Clients Search",
-        method: "GET",
-        path: "/organizations/{organizationId}/clients/search",
-        description: "Search for clients across an organization using filters like MAC address or IP.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getNetworkClientPolicy",
-        name: "Get Network Client Policy",
-        method: "GET",
-        path: "/networks/{networkId}/clients/{clientId}/policy",
-        description: "Retrieve the policy assigned to a client on a network.",
-        parameters: [
-          {
-            name: "networkId",
-            type: "text",
-            required: true,
-            description: "Network ID"
-          },
-          {
-            name: "clientId",
-            type: "text",
-            required: true,
-            description: "Client ID (usually MAC address)"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationLicenses",
-        name: "Get Organization Licenses",
-        method: "GET",
-        path: "/organizations/{organizationId}/licenses",
-        description: "Retrieve all licenses for the organization.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationLicense",
-        name: "Get Organization License",
-        method: "GET",
-        path: "/organizations/{organizationId}/licenses/{licenseId}",
-        description: "Retrieve details of a specific license by ID.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          },
-          {
-            name: "licenseId",
-            type: "text",
-            required: true,
-            description: "License ID"
-          }
-        ]
-      },
-      {
-        id: "getOrganizationLoginSecurity",
-        name: "Get Organization Login Security",
-        method: "GET",
-        path: "/organizations/{organizationId}/loginSecurity",
-        description: "Retrieve login security settings for the organization.",
-        parameters: [
-          {
-            name: "organizationId",
-            type: "text",
-            required: true,
-            description: "Organization ID"
-          }
-        ]
-      },
-      {
-        id: "getNetworkTrafficAnalysis",
-        name: "Get Network Traffic Analysis",
-        method: "GET",
-        path: "/networks/{networkId}/trafficAnalysis",
-        description: "Retrieve traffic analysis settings for a network.",
-        parameters: [
-          {
-            name: "networkId",
-            type: "text",
-            required: true,
-            description: "Network ID"
-          }
-        ]
-      },
-      {
-        id: "getNetworkSyslogServers",
-        name: "Get Network Syslog Servers",
-        method: "GET",
-        path: "/networks/{networkId}/syslogServers",
-        description: "Retrieve syslog server settings for a network.",
-        parameters: [
-          {
-            name: "networkId",
-            type: "text",
-            required: true,
-            description: "Network ID"
-          }
-        ]
-      }
-    ]
-  }
-};
+import integrations from '../integrations-details';
 
 const ApiTester = () => {
   // State
@@ -718,6 +13,7 @@ const ApiTester = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('response');
   const [merakiAuthMethod, setMerakiAuthMethod] = useState('api'); // 'api' or 'oauth'
+  const [ciscoDnaAuthenticated, setCiscoDnaAuthenticated] = useState(false);
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -725,16 +21,29 @@ const ApiTester = () => {
     ? currentIntegration.endpoints.find(e => e.id === selectedEndpoint)
     : null;
 
+  // Check if Cisco DNA token exists in localStorage on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('ciscoDnaToken');
+    const baseUrl = localStorage.getItem('ciscoDnaBaseUrl');
+    if (token && baseUrl && selectedIntegration === 'ciscoDna') {
+      setCiscoDnaAuthenticated(true);
+    }
+  }, [selectedIntegration]);
+
   // Reset parameters when endpoint changes, but preserve baseUri for Meraki
   useEffect(() => {
     // If it's the Meraki integration and baseUri exists, preserve it
     if (selectedIntegration === 'meraki' && paramValues.baseUri) {
       const baseUri = paramValues.baseUri;
       setParamValues({ baseUri });
+    } else if (selectedIntegration === 'ciscoDna' && paramValues.baseUrl) {
+      // Preserve baseUrl for Cisco DNA
+      const baseUrl = paramValues.baseUrl;
+      setParamValues({ baseUrl });
     } else {
       setParamValues({});
     }
-  }, [selectedEndpoint, selectedIntegration, paramValues.baseUri]);
+  }, [selectedEndpoint, selectedIntegration, paramValues.baseUri, paramValues.baseUrl]);
 
   // Handle integration selection
   const handleIntegrationChange = (e) => {
@@ -748,6 +57,17 @@ const ApiTester = () => {
     // Reset Meraki auth method to API by default when changing integrations
     if (integration === 'meraki') {
       setMerakiAuthMethod('api');
+    }
+
+    // Check if Cisco DNA token exists in localStorage
+    if (integration === 'ciscoDna') {
+      const token = localStorage.getItem('ciscoDnaToken');
+      const baseUrl = localStorage.getItem('ciscoDnaBaseUrl');
+      if (token && baseUrl) {
+        setCiscoDnaAuthenticated(true);
+      } else {
+        setCiscoDnaAuthenticated(false);
+      }
     }
   };
   
@@ -790,6 +110,68 @@ const ApiTester = () => {
     });
   };
 
+  // Handle Cisco DNA authentication
+  const handleCiscoDnaAuth = async (e) => {
+    e.preventDefault();
+    
+    if (!paramValues.baseUrl || !authData.username || !authData.password) {
+      setError('Base URL, username, and password are required for Cisco DNA authentication.');
+      return;
+    }
+
+    // Show loading state
+    setLoading(true);
+    setError('');
+    setResponse(null);
+
+    try {
+      // Make the API call to get token
+      const res = await fetch(`${integrations.ciscoDna.baseUrl}/dna/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          baseUrl: paramValues.baseUrl,
+          username: authData.username,
+          password: authData.password
+        })
+      });
+
+      // Parse the response
+      const data = await res.json();
+
+      if (res.ok && data.token && data.baseUrl) {
+        // Store token and baseUrl in localStorage
+        localStorage.setItem('ciscoDnaToken', data.token);
+        localStorage.setItem('ciscoDnaBaseUrl', data.baseUrl);
+        console.log('✅ Cisco DNA token and baseUrl stored in localStorage');
+        
+        // Set authenticated state
+        setCiscoDnaAuthenticated(true);
+
+        // Format the response
+        // setResponse({
+        //   status: res.status,
+        //   statusText: res.statusText,
+        //   headers: Object.fromEntries([...res.headers.entries()]),
+        //   url: `${integrations.ciscoDna.baseUrl}/dna/token`,
+        //   method: 'POST',
+        //   data: data
+        // });
+
+        // Switch to response tab
+        // setActiveTab('response');
+      } else {
+        setError(`Authentication failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setError(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Execute API request
   const executeRequest = async (e) => {
     e.preventDefault();
@@ -819,7 +201,7 @@ const ApiTester = () => {
     // Process regular path parameters
     Object.keys(paramValues).forEach(paramName => {
       // Skip baseUri as it's handled separately
-      if (paramName === 'baseUri') return;
+      if (paramName === 'baseUri' || paramName === 'baseUrl') return;
 
       // Replace path parameters in the format {param_name}
       const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
@@ -855,6 +237,14 @@ const ApiTester = () => {
       }
     }
 
+    // Special handling for Cisco DNA - add token from localStorage
+    if (selectedIntegration === 'ciscoDna') {
+      const token = localStorage.getItem('ciscoDnaToken');
+      if (token) {
+        headers['X-Auth-Token'] = token;
+      }
+    }
+
     // Prepare request options
     const options = {
       method: currentEndpoint.method,
@@ -870,6 +260,12 @@ const ApiTester = () => {
           bodyParams[key] = paramValues[key];
         }
       });
+
+      // Special handling for Cisco DNA network-devices endpoint
+      if (selectedIntegration === 'ciscoDna' && currentEndpoint.id === 'getNetworkDevices') {
+        bodyParams.baseUrl = localStorage.getItem('ciscoDnaBaseUrl');
+        bodyParams.token = localStorage.getItem('ciscoDnaToken');
+      }
 
       if (Object.keys(bodyParams).length > 0) {
         options.body = JSON.stringify(bodyParams);
@@ -955,6 +351,84 @@ const ApiTester = () => {
   // Render authentication form
   const renderAuthForm = () => {
     if (!currentIntegration) return null;
+    
+    // Special handling for Cisco DNA
+    if (selectedIntegration === 'ciscoDna') {
+      if (ciscoDnaAuthenticated) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Cisco DNA Center</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('ciscoDnaToken');
+                  localStorage.removeItem('ciscoDnaBaseUrl');
+                  setCiscoDnaAuthenticated(false);
+                  setAuthData({});
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <form onSubmit={handleCiscoDnaAuth}>
+            <div className="auth-form">
+              <div className="config-group">
+                <label htmlFor="config-baseUrl">Base URL *</label>
+                <input
+                  type="text"
+                  id="config-baseUrl"
+                  name="baseUrl"
+                  placeholder="Cisco DNA Center URL (e.g., https://sandboxdnac.cisco.com)"
+                  value={paramValues.baseUrl || ''}
+                  onChange={handleParamChange}
+                  required
+                />
+              </div>
+              <div className="auth-group">
+                <label htmlFor="auth-username">Username *</label>
+                <input
+                  type="text"
+                  id="auth-username"
+                  name="username"
+                  placeholder="Enter your username"
+                  value={authData.username || ''}
+                  onChange={handleAuthChange}
+                  required
+                />
+              </div>
+              <div className="auth-group">
+                <label htmlFor="auth-password">Password *</label>
+                <input
+                  type="password"
+                  id="auth-password"
+                  name="password"
+                  placeholder="Enter your password"
+                  value={authData.password || ''}
+                  onChange={handleAuthChange}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn execute-btn"
+                disabled={loading}
+              >
+                {loading ? 'Authenticating...' : 'Get Token'}
+              </button>
+            </div>
+          </form>
+        </div>
+      );
+    }
     
     // Special handling for Meraki to show auth method selection
     if (selectedIntegration === 'meraki') {
@@ -1286,8 +760,8 @@ const ApiTester = () => {
                 data: response.data
               }, null, 2)}
             </pre>
-          </div>
         </div>
+      </div>
       </div>
     );
   };
@@ -1324,7 +798,10 @@ const ApiTester = () => {
 
           {currentIntegration && selectedIntegration === 'meraki' && merakiAuthMethod === 'api' && renderAdditionalConfig()}
 
-          {currentIntegration && (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && (
+          {/* Only show endpoint selector for Cisco DNA if authenticated */}
+          {currentIntegration && 
+           ((selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) || 
+            (selectedIntegration !== 'ciscoDna' && (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
               <select
