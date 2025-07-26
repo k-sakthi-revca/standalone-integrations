@@ -38,8 +38,10 @@ router.post("/dna/token", async (req, res) => {
 });
 
 // ========== 2. Route to fetch network devices ==========
-router.post("/dna/network-devices", async (req, res) => {
-  const { baseUrl, token } = req.body;
+router.get("/network-devices", async (req, res) => {
+  // Get parameters from query params or body
+  const baseUrl = req.query.baseUrl || (req.body && req.body.baseUrl);
+  const token = req.query.token || (req.body && req.body.token);
 
   if (!baseUrl || !token) {
     return res.status(400).json({ message: "baseUrl and token are required" });
@@ -62,6 +64,26 @@ router.post("/dna/network-devices", async (req, res) => {
   } catch (error) {
     console.error("❌ Device fetch error:", error.response?.data || error.message);
     res.status(500).json({ message: "Failed to fetch network devices", error: error.message });
+  }
+});
+
+router.get('/global-issues', async (req, res, next) => {
+  const { baseUrl, token } = req.query;
+  console.log('Global issues request with:', baseUrl, token);
+  try {
+    // Make API call to Meraki
+    const response = await axios.get(`${baseUrl}/dna/intent/api/v1/issues`, {
+      headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Auth-Token": token,
+      },
+    });
+    
+    res.json(response.data);
+  } catch (error) {
+    console.error("❌ Issues fetch error:", error.response?.data || error.message);
+    res.status(500).json({ message: "Failed to fetch issues", error: error.message });
   }
 });
 

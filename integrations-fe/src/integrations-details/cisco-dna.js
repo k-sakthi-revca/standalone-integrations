@@ -23,8 +23,16 @@ const ciscoDna = {
       id: "getNetworkDevices",
       name: "Get Network Devices",
       method: "GET",
-      path: "/dna/network-devices",
+      path: "/network-devices",
       description: "Retrieve network devices from Cisco DNA Center",
+      parameters: []
+    },
+    {
+      id: "getGlobalIssues",
+      name: "Get Global Issues",
+      method: "GET",
+      path: "/global-issues",
+      description: "Retrieve Global Issues from Cisco DNA Center",
       parameters: []
     }
   ]
