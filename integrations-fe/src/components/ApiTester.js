@@ -14,6 +14,7 @@ const ApiTester = () => {
   const [activeTab, setActiveTab] = useState('response');
   const [merakiAuthMethod, setMerakiAuthMethod] = useState('api'); // 'api' or 'oauth'
   const [ciscoDnaAuthenticated, setCiscoDnaAuthenticated] = useState(false);
+  const [boxAuthMethod, setBoxAuthMethod] = useState('oauth'); // Only 'oauth' for Box
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -58,6 +59,11 @@ const ApiTester = () => {
     if (integration === 'meraki') {
       setMerakiAuthMethod('api');
     }
+    
+    // Set Box auth method to OAuth by default
+    if (integration === 'box') {
+      setBoxAuthMethod('oauth');
+    }
 
     // Check if Cisco DNA token exists in localStorage
     if (integration === 'ciscoDna') {
@@ -79,12 +85,17 @@ const ApiTester = () => {
   };
   
   // Handle OAuth connect button click
-  const handleOAuthConnect = () => {
+  const handleOAuthConnect = (integration) => {
     // Get the current frontend URL to redirect back to after OAuth
     const frontEndUrl = window.location.origin;
     
-    // Redirect to the Meraki OAuth route with frontEndUrl as a query parameter
-    window.location.href = `http://localhost:5000/api/meraki/auth/meraki?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    if (integration === 'meraki') {
+      // Redirect to the Meraki OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/meraki/auth/meraki?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'box') {
+      // Redirect to the Box OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/box/auth/box?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    }
   };
 
   // Handle endpoint selection
@@ -361,6 +372,42 @@ const ApiTester = () => {
   const renderAuthForm = () => {
     if (!currentIntegration) return null;
     
+    // Special handling for Box
+    if (selectedIntegration === 'box') {
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="boxAuthMethod"
+                  value="oauth"
+                  checked={boxAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('box')}
+            >
+              Connect with Box
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Box account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    }
+    
     // Special handling for Cisco DNA
     if (selectedIntegration === 'ciscoDna') {
       if (ciscoDnaAuthenticated) {
@@ -475,7 +522,7 @@ const ApiTester = () => {
             <div className="oauth-connect">
               <button 
                 className="btn oauth-btn"
-                onClick={handleOAuthConnect}
+                onClick={() => handleOAuthConnect('meraki')}
               >
                 Connect with Meraki
               </button>
@@ -807,10 +854,12 @@ const ApiTester = () => {
 
           {currentIntegration && selectedIntegration === 'meraki' && merakiAuthMethod === 'api' && renderAdditionalConfig()}
 
-          {/* Only show endpoint selector for Cisco DNA if authenticated */}
+          {/* Only show endpoint selector for Cisco DNA if authenticated and not Box */}
           {currentIntegration && 
            ((selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) || 
-            (selectedIntegration !== 'ciscoDna' && (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
+            (selectedIntegration !== 'ciscoDna' && 
+             (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
+             selectedIntegration !== 'box')) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
               <select
@@ -829,7 +878,9 @@ const ApiTester = () => {
             </div>
           )}
 
-          {currentEndpoint && (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && (
+          {currentEndpoint && 
+           (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
+           selectedIntegration !== 'box' && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>
