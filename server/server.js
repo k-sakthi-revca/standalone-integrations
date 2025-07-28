@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const securityScorecardsRoutes = require('./routes/securityscorecards');
 const merakiRoutes = require('./routes/meraki');
 const ciscoDnaRoutes = require('./routes/cisco-dna');
+const boxRoutes = require('./routes/box');
 
 // Initialize express app
 const app = express();
@@ -39,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log('Request headers:', req.headers);
+  // console.log('Request headers:', req.headers);
   next();
 });
 
@@ -53,6 +54,7 @@ app.get('/api/test', (req, res) => {
 app.use('/api/securityscorecards', securityScorecardsRoutes);
 app.use('/api/meraki', merakiRoutes);
 app.use('/api/cisco-dna', ciscoDnaRoutes);
+app.use('/api/box', boxRoutes);
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');

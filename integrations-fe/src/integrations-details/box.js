@@ -1,0 +1,55 @@
+// Box integration configuration
+const box = {
+  name: "Box",
+  baseUrl: "http://localhost:5000/api/box",
+  auth: {
+    type: "oauth",
+    keyName: "Authorization"
+  },
+  headers: {
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+  },
+  endpoints: [
+    {
+      id: "getUserInfo",
+      name: "Get User Info",
+      method: "GET",
+      path: "/user",
+      description: "Retrieve information about the authenticated user",
+      parameters: []
+    },
+    {
+      id: "getFolderItems",
+      name: "Get Folder Items",
+      method: "GET",
+      path: "/folders/{folderId}/items",
+      description: "Retrieve items in a specific folder",
+      parameters: [
+        {
+          name: "folderId",
+          type: "text",
+          required: true,
+          description: "Folder ID (use '0' for root folder)"
+        }
+      ]
+    },
+    {
+      id: "getFileInfo",
+      name: "Get File Info",
+      method: "GET",
+      path: "/files/{fileId}",
+      description: "Retrieve information about a specific file",
+      parameters: [
+        {
+          name: "fileId",
+          type: "text",
+          required: true,
+          description: "File ID"
+        }
+      ]
+    }
+  ]
+};
+
+export default box;

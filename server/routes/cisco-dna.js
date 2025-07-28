@@ -37,6 +37,18 @@ router.post("/dna/token", async (req, res) => {
   }
 });
 
+// Helper function to make requests
+const fetchFromDNAC = async (url, token) => {
+  const response = await axios.get(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Auth-Token": token,
+    },
+  });
+  return response.data;
+};
+
 // ========== 2. Route to fetch network devices ==========
 router.get("/network-devices", async (req, res) => {
   // Get parameters from query params or body
@@ -48,42 +60,71 @@ router.get("/network-devices", async (req, res) => {
   }
 
   try {
-    const deviceResponse = await axios.get(
-      `${baseUrl}/dna/intent/api/v1/network-device`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-Auth-Token": token,
-        },
-      }
-    );
-
-    console.log("📡 Device data fetched from:", baseUrl);
-    res.json(deviceResponse.data);
+    const data = await fetchFromDNAC(`${baseUrl}/dna/intent/api/v1/network-device`, token);
+    res.json(data);
   } catch (error) {
     console.error("❌ Device fetch error:", error.response?.data || error.message);
     res.status(500).json({ message: "Failed to fetch network devices", error: error.message });
   }
 });
 
-router.get('/global-issues', async (req, res, next) => {
+// Global Issues
+router.get('/global-issues', async (req, res) => {
   const { baseUrl, token } = req.query;
-  console.log('Global issues request with:', baseUrl, token);
   try {
-    // Make API call to Meraki
-    const response = await axios.get(`${baseUrl}/dna/intent/api/v1/issues`, {
-      headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-Auth-Token": token,
-      },
-    });
-    
-    res.json(response.data);
+    const data = await fetchFromDNAC(`${baseUrl}/dna/intent/api/v1/issues`, token);
+    res.json(data);
   } catch (error) {
     console.error("❌ Issues fetch error:", error.response?.data || error.message);
     res.status(500).json({ message: "Failed to fetch issues", error: error.message });
+  }
+});
+
+// Event Logs
+router.get('/event-logs', async (req, res) => {
+  const { baseUrl, token } = req.query;
+  try {
+    const data = await fetchFromDNAC(`${baseUrl}/dna/intent/api/v1/event/event-series`, token);
+    res.json(data);
+  } catch (error) {
+    console.error("❌ Event logs fetch error:", error.response?.data || error.message);
+    res.status(500).json({ message: "Failed to fetch event logs", error: error.message });
+  }
+});
+
+// Network Health
+router.get('/network-health', async (req, res) => {
+  const { baseUrl, token } = req.query;
+  try {
+    const data = await fetchFromDNAC(`${baseUrl}/dna/intent/api/v1/network-health`, token);
+    res.json(data);
+  } catch (error) {
+    console.error("❌ Network health fetch error:", error.response?.data || error.message);
+    res.status(500).json({ message: "Failed to fetch network health", error: error.message });
+  }
+});
+
+// Site Health
+router.get('/site-health', async (req, res) => {
+  const { baseUrl, token } = req.query;
+  try {
+    const data = await fetchFromDNAC(`${baseUrl}/dna/intent/api/v1/site-health`, token);
+    res.json(data);
+  } catch (error) {
+    console.error("❌ Site health fetch error:", error.response?.data || error.message);
+    res.status(500).json({ message: "Failed to fetch site health", error: error.message });
+  }
+});
+
+// Device Interface Details
+router.get('/device-interfaces', async (req, res) => {
+  const { baseUrl, token } = req.query;
+  try {
+    const data = await fetchFromDNAC(`${baseUrl}/dna/intent/api/v1/interface`, token);
+    res.json(data);
+  } catch (error) {
+    console.error("❌ Interface fetch error:", error.response?.data || error.message);
+    res.status(500).json({ message: "Failed to fetch device interfaces", error: error.message });
   }
 });
 
