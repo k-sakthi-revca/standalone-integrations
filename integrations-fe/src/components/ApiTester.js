@@ -46,6 +46,22 @@ const ApiTester = () => {
     }
   }, [selectedEndpoint, selectedIntegration, paramValues.baseUri, paramValues.baseUrl]);
 
+  useEffect(()=>{
+    const params = new URLSearchParams(window.location.search);
+    if(params){
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      if(accessToken || refreshToken){
+        localStorage.setItem('boxAccessToken',accessToken);
+        localStorage.setItem('boxrefreshToken',refreshToken);
+      }
+    }
+    setTimeout(() => {
+      // Remove query params from URL after 3 seconds
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 3000);
+  },[])
+
   // Handle integration selection
   const handleIntegrationChange = (e) => {
     const integration = e.target.value;
@@ -207,6 +223,15 @@ const ApiTester = () => {
       queryParams.append('baseUri', paramValues.baseUri);
       // Also add it as a header
       headers['X-Meraki-Base-URI'] = paramValues.baseUri;
+    }
+    
+    // Handle Box token if present
+    if (selectedIntegration === 'box') {
+      const boxToken = localStorage.getItem('boxAccessToken');
+      if (boxToken) {
+        // Add token as a query parameter for all Box endpoints
+        queryParams.append('token', boxToken);
+      }
     }
 
     // Process regular path parameters
@@ -374,6 +399,31 @@ const ApiTester = () => {
     
     // Special handling for Box
     if (selectedIntegration === 'box') {
+      const boxToken = localStorage.getItem('boxAccessToken');
+      
+      if (boxToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Box</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('boxAccessToken');
+                  localStorage.removeItem('boxrefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
       return (
         <div className="auth-section">
           <h3>Authentication</h3>
@@ -854,12 +904,12 @@ const ApiTester = () => {
 
           {currentIntegration && selectedIntegration === 'meraki' && merakiAuthMethod === 'api' && renderAdditionalConfig()}
 
-          {/* Only show endpoint selector for Cisco DNA if authenticated and not Box */}
+          {/* Show endpoint selector for authenticated integrations */}
           {currentIntegration && 
            ((selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) || 
-            (selectedIntegration !== 'ciscoDna' && 
-             (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
-             selectedIntegration !== 'box')) && (
+            (selectedIntegration === 'box' && localStorage.getItem('boxAccessToken')) ||
+            (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && 
+             (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
               <select
@@ -880,7 +930,7 @@ const ApiTester = () => {
 
           {currentEndpoint && 
            (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
-           selectedIntegration !== 'box' && (
+           (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>
