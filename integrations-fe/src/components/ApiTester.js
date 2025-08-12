@@ -16,6 +16,7 @@ const ApiTester = () => {
   const [ciscoDnaAuthenticated, setCiscoDnaAuthenticated] = useState(false);
   const [boxAuthMethod, setBoxAuthMethod] = useState('oauth'); // Only 'oauth' for Box
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
+  const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -52,9 +53,20 @@ const ApiTester = () => {
     if(params){
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
+      const instanceUrl = params.get('instance_url');
+      
       if(accessToken || refreshToken){
+        // Check if we're in the process of authenticating with Salesforce
+        if (localStorage.getItem('salesforceAuthInProgress') === 'true') {
+          localStorage.setItem('salesforceAccessToken', accessToken);
+          localStorage.setItem('salesforceRefreshToken', refreshToken);
+          if (instanceUrl) {
+            localStorage.setItem('salesforceInstanceUrl', instanceUrl);
+          }
+          localStorage.removeItem('salesforceAuthInProgress');
+        }
         // Check if we're in the process of authenticating with Egnyte
-        if (localStorage.getItem('egnyteAuthInProgress') === 'true') {
+        else if (localStorage.getItem('egnyteAuthInProgress') === 'true') {
           localStorage.setItem('egnyteAccessToken', accessToken);
           localStorage.setItem('egnyteRefreshToken', refreshToken);
           localStorage.removeItem('egnyteAuthInProgress');
@@ -131,6 +143,12 @@ const ApiTester = () => {
       
       // Redirect to the Egnyte OAuth route with subdomain and frontEndUrl as query parameters
       window.location.href = `http://localhost:5000/api/egnyte/auth/egnyte?subdomain=${encodeURIComponent(egnyteSubdomain)}&frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'salesforce') {
+      // Set a flag to indicate we're authenticating with Salesforce
+      localStorage.setItem('salesforceAuthInProgress', 'true');
+      
+      // Redirect to the Salesforce OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/salesforce/auth/salesforce?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -265,6 +283,19 @@ const ApiTester = () => {
       if (egnyteToken) {
         // Add token as a query parameter for all Egnyte endpoints
         queryParams.append('token', egnyteToken);
+      }
+    }
+    
+    // Handle Salesforce token if present
+    if (selectedIntegration === 'salesforce') {
+      const salesforceToken = localStorage.getItem('salesforceAccessToken');
+      const instanceUrl = localStorage.getItem('salesforceInstanceUrl');
+      if (salesforceToken) {
+        // Add token as a query parameter for all Salesforce endpoints
+        queryParams.append('token', salesforceToken);
+        if (instanceUrl) {
+          queryParams.append('instanceUrl', instanceUrl);
+        }
       }
     }
 
@@ -634,6 +665,68 @@ const ApiTester = () => {
               </button>
             </div>
           </form>
+        </div>
+      );
+    }
+    
+    // Special handling for Salesforce
+    if (selectedIntegration === 'salesforce') {
+      const salesforceToken = localStorage.getItem('salesforceAccessToken');
+      
+      if (salesforceToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Salesforce</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('salesforceAccessToken');
+                  localStorage.removeItem('salesforceRefreshToken');
+                  localStorage.removeItem('salesforceInstanceUrl');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="salesforceAuthMethod"
+                  value="oauth"
+                  checked={salesforceAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('salesforce')}
+            >
+              Connect with Salesforce
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Salesforce account using OAuth.
+            </small>
+          </div>
         </div>
       );
     }
@@ -1011,7 +1104,9 @@ const ApiTester = () => {
            ((selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) || 
             (selectedIntegration === 'box' && localStorage.getItem('boxAccessToken')) ||
             (selectedIntegration === 'egnyte' && localStorage.getItem('egnyteAccessToken')) ||
-            (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && selectedIntegration !== 'egnyte' && 
+            (selectedIntegration === 'salesforce' && localStorage.getItem('salesforceAccessToken')) ||
+            (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && 
+             selectedIntegration !== 'egnyte' && selectedIntegration !== 'salesforce' && 
              (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
@@ -1034,7 +1129,8 @@ const ApiTester = () => {
           {currentEndpoint && 
            (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
            (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) &&
-           (selectedIntegration !== 'egnyte' || localStorage.getItem('egnyteAccessToken')) && (
+           (selectedIntegration !== 'egnyte' || localStorage.getItem('egnyteAccessToken')) &&
+           (selectedIntegration !== 'salesforce' || localStorage.getItem('salesforceAccessToken')) && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>
