@@ -11,6 +11,7 @@ const ciscoDnaRoutes = require('./routes/cisco-dna');
 const boxRoutes = require('./routes/box');
 const egnyteRoutes = require('./routes/egnyte');
 const solarwindsRoutes = require('./routes/solarwinds');
+const fmpRoutes = require('./routes/fmp');
 const SyslogServer = require("syslog-server");
 
 // Initialize express app
@@ -60,6 +61,7 @@ app.use('/api/cisco-dna', ciscoDnaRoutes);
 app.use('/api/box', boxRoutes);
 app.use('/api/egnyte', egnyteRoutes);
 app.use('/api/solarwinds', solarwindsRoutes);
+app.use('/api/fmp', fmpRoutes);
 
 
 // Check if the React build directory exists
@@ -114,14 +116,14 @@ syslogServer.on("message", (msg) => {
 });
 
 // Start syslog server on UDP port 1514
-syslogServer.start({
-  port: 1514,  // <--- This is the port you'll put in ADAudit Plus config
-  protocol: "udp4"
-}).then(() => {
-  console.log("✅ Syslog server is listening on UDP port 1514");
-}).catch((err) => {
-  console.error("❌ Failed to start syslog server:", err);
-});
+// syslogServer.start({
+//   port: 1514,  // <--- This is the port you'll put in ADAudit Plus config
+//   protocol: "udp4"
+// }).then(() => {
+//   console.log("✅ Syslog server is listening on UDP port 1514");
+// }).catch((err) => {
+//   console.error("❌ Failed to start syslog server:", err);
+// });
 
 
 // Error handling middleware

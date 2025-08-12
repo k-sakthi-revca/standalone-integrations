@@ -5,6 +5,7 @@ import meraki from './meraki';
 import ciscoDna from './cisco-dna';
 import box from './box';
 import egnyte from './egnyte';
+import fmp from './fmp';
 
 // Combine all integrations into a single object
 const integrations = {
@@ -13,7 +14,8 @@ const integrations = {
   meraki,
   ciscoDna,
   box,
-  egnyte
+  egnyte,
+  fmp
 };
 
 export default integrations;
