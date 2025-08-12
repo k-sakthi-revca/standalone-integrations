@@ -7,6 +7,7 @@ import box from './box';
 import egnyte from './egnyte';
 import fmp from './fmp';
 import salesforce from './salesforce';
+import sharepoint from './sharepoint'
 
 // Combine all integrations into a single object
 const integrations = {
@@ -17,7 +18,8 @@ const integrations = {
   box,
   egnyte,
   fmp,
-  salesforce
+  salesforce,
+  sharepoint
 };
 
 export default integrations;

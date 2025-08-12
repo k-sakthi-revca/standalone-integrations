@@ -17,6 +17,7 @@ const ApiTester = () => {
   const [boxAuthMethod, setBoxAuthMethod] = useState('oauth'); // Only 'oauth' for Box
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
+  const [sharepointAuthMethod, setSharepointAuthMethod] = useState('oauth'); // Only 'oauth' for Sharepoint
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -65,6 +66,12 @@ const ApiTester = () => {
           }
           localStorage.removeItem('salesforceAuthInProgress');
         }
+        // Check if we're in the process of authenticating with Sharepoint
+        else if (localStorage.getItem('sharepointAuthInProgress') === 'true') {
+          localStorage.setItem('sharepointAccessToken', accessToken);
+          localStorage.setItem('sharepointRefreshToken', refreshToken);
+          localStorage.removeItem('sharepointAuthInProgress');
+        }
         // Check if we're in the process of authenticating with Egnyte
         else if (localStorage.getItem('egnyteAuthInProgress') === 'true') {
           localStorage.setItem('egnyteAccessToken', accessToken);
@@ -100,6 +107,11 @@ const ApiTester = () => {
     // Set Box auth method to OAuth by default
     if (integration === 'box') {
       setBoxAuthMethod('oauth');
+    }
+    
+    // Set Sharepoint auth method to OAuth by default
+    if (integration === 'sharepoint') {
+      setSharepointAuthMethod('oauth');
     }
 
     // Reset Egnyte subdomain when changing integrations
@@ -149,6 +161,12 @@ const ApiTester = () => {
       
       // Redirect to the Salesforce OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/salesforce/auth/salesforce?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'sharepoint') {
+      // Set a flag to indicate we're authenticating with Sharepoint
+      localStorage.setItem('sharepointAuthInProgress', 'true');
+      
+      // Redirect to the Sharepoint OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/sharepoint/auth/sharepoint?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -296,6 +314,15 @@ const ApiTester = () => {
         if (instanceUrl) {
           queryParams.append('instanceUrl', instanceUrl);
         }
+      }
+    }
+    
+    // Handle Sharepoint token if present
+    if (selectedIntegration === 'sharepoint') {
+      const sharepointToken = localStorage.getItem('sharepointAccessToken');
+      if (sharepointToken) {
+        // Add token as a query parameter for all Sharepoint endpoints
+        queryParams.append('token', sharepointToken);
       }
     }
 
@@ -731,6 +758,67 @@ const ApiTester = () => {
       );
     }
     
+    // Special handling for Sharepoint
+    if (selectedIntegration === 'sharepoint') {
+      const sharepointToken = localStorage.getItem('sharepointAccessToken');
+      
+      if (sharepointToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Sharepoint</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('sharepointAccessToken');
+                  localStorage.removeItem('sharepointRefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="sharepointAuthMethod"
+                  value="oauth"
+                  checked={sharepointAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('sharepoint')}
+            >
+              Connect with Sharepoint
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Microsoft Sharepoint account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    }
+    
     // Special handling for Meraki to show auth method selection
     if (selectedIntegration === 'meraki') {
       return (
@@ -1105,8 +1193,10 @@ const ApiTester = () => {
             (selectedIntegration === 'box' && localStorage.getItem('boxAccessToken')) ||
             (selectedIntegration === 'egnyte' && localStorage.getItem('egnyteAccessToken')) ||
             (selectedIntegration === 'salesforce' && localStorage.getItem('salesforceAccessToken')) ||
+            (selectedIntegration === 'sharepoint' && localStorage.getItem('sharepointAccessToken')) ||
             (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && 
              selectedIntegration !== 'egnyte' && selectedIntegration !== 'salesforce' && 
+             selectedIntegration !== 'sharepoint' && 
              (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
@@ -1130,7 +1220,8 @@ const ApiTester = () => {
            (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
            (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) &&
            (selectedIntegration !== 'egnyte' || localStorage.getItem('egnyteAccessToken')) &&
-           (selectedIntegration !== 'salesforce' || localStorage.getItem('salesforceAccessToken')) && (
+           (selectedIntegration !== 'salesforce' || localStorage.getItem('salesforceAccessToken')) &&
+           (selectedIntegration !== 'sharepoint' || localStorage.getItem('sharepointAccessToken')) && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>

@@ -13,6 +13,7 @@ const egnyteRoutes = require('./routes/egnyte');
 const solarwindsRoutes = require('./routes/solarwinds');
 const fmpRoutes = require('./routes/fmp');
 const salesforceRoutes = require('./routes/salesforce');
+const sharepointRoutes = require('./routes/sharepoint');
 
 const SyslogServer = require("syslog-server");
 
@@ -65,6 +66,7 @@ app.use('/api/egnyte', egnyteRoutes);
 app.use('/api/solarwinds', solarwindsRoutes);
 app.use('/api/fmp', fmpRoutes);
 app.use('/api/salesforce', salesforceRoutes);
+app.use('/api/sharepoint', sharepointRoutes);
 
 
 // Check if the React build directory exists
