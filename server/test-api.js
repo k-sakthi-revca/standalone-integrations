@@ -23,6 +23,7 @@ async function testSecurityScorecardAPI() {
         'Accept': 'application/json'
       }
     });
+    
     console.log('API response status:', response.status);
     console.log('API response:', response.data);
     return true;
