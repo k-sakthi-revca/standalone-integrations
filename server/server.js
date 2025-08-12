@@ -9,11 +9,14 @@ const securityScorecardsRoutes = require('./routes/securityscorecards');
 const merakiRoutes = require('./routes/meraki');
 const ciscoDnaRoutes = require('./routes/cisco-dna');
 const boxRoutes = require('./routes/box');
+const egnyteRoutes = require('./routes/egnyte');
+const solarwindsRoutes = require('./routes/solarwinds');
+const SyslogServer = require("syslog-server");
 
 // Initialize express app
 const app = express();
 const PORT = process.env.PORT || 5000;
-
+const syslogServer = new SyslogServer();
 // Apply express.raw() *only* to the webhook route
 app.post('/api/meraki/webhook', express.raw({ type: '*/*' }), (req, res) => {
   const SHARED_SECRET = "193296e25da6f13d794296adf525b0b49e42f664"; // ✅ move to .env in production
@@ -55,6 +58,9 @@ app.use('/api/securityscorecards', securityScorecardsRoutes);
 app.use('/api/meraki', merakiRoutes);
 app.use('/api/cisco-dna', ciscoDnaRoutes);
 app.use('/api/box', boxRoutes);
+app.use('/api/egnyte', egnyteRoutes);
+app.use('/api/solarwinds', solarwindsRoutes);
+
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');
@@ -100,6 +106,23 @@ if (fs.existsSync(reactBuildPath)) {
     `);
   });
 }
+
+
+syslogServer.on("message", (msg) => {
+  console.log("📜 Syslog Message Received:", msg);
+  // You could also push this to a DB, forward it to another API, etc.
+});
+
+// Start syslog server on UDP port 1514
+syslogServer.start({
+  port: 1514,  // <--- This is the port you'll put in ADAudit Plus config
+  protocol: "udp4"
+}).then(() => {
+  console.log("✅ Syslog server is listening on UDP port 1514");
+}).catch((err) => {
+  console.error("❌ Failed to start syslog server:", err);
+});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

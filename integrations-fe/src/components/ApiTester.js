@@ -15,6 +15,7 @@ const ApiTester = () => {
   const [merakiAuthMethod, setMerakiAuthMethod] = useState('api'); // 'api' or 'oauth'
   const [ciscoDnaAuthenticated, setCiscoDnaAuthenticated] = useState(false);
   const [boxAuthMethod, setBoxAuthMethod] = useState('oauth'); // Only 'oauth' for Box
+  const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -52,8 +53,16 @@ const ApiTester = () => {
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
       if(accessToken || refreshToken){
-        localStorage.setItem('boxAccessToken',accessToken);
-        localStorage.setItem('boxrefreshToken',refreshToken);
+        // Check if we're in the process of authenticating with Egnyte
+        if (localStorage.getItem('egnyteAuthInProgress') === 'true') {
+          localStorage.setItem('egnyteAccessToken', accessToken);
+          localStorage.setItem('egnyteRefreshToken', refreshToken);
+          localStorage.removeItem('egnyteAuthInProgress');
+        } else {
+          // Default to Box if no specific auth is in progress
+          localStorage.setItem('boxAccessToken', accessToken);
+          localStorage.setItem('boxRefreshToken', refreshToken);
+        }
       }
     }
     setTimeout(() => {
@@ -79,6 +88,11 @@ const ApiTester = () => {
     // Set Box auth method to OAuth by default
     if (integration === 'box') {
       setBoxAuthMethod('oauth');
+    }
+
+    // Reset Egnyte subdomain when changing integrations
+    if (integration === 'egnyte') {
+      setEgnyteSubdomain('');
     }
 
     // Check if Cisco DNA token exists in localStorage
@@ -111,6 +125,12 @@ const ApiTester = () => {
     } else if (integration === 'box') {
       // Redirect to the Box OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/box/auth/box?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'egnyte') {
+      // Set a flag to indicate we're authenticating with Egnyte
+      localStorage.setItem('egnyteAuthInProgress', 'true');
+      
+      // Redirect to the Egnyte OAuth route with subdomain and frontEndUrl as query parameters
+      window.location.href = `http://localhost:5000/api/egnyte/auth/egnyte?subdomain=${encodeURIComponent(egnyteSubdomain)}&frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -135,6 +155,11 @@ const ApiTester = () => {
       ...paramValues,
       [e.target.name]: e.target.value
     });
+  };
+  
+  // Handle Egnyte subdomain input change
+  const handleSubdomainChange = (e) => {
+    setEgnyteSubdomain(e.target.value);
   };
 
   // Handle Cisco DNA authentication
@@ -231,6 +256,15 @@ const ApiTester = () => {
       if (boxToken) {
         // Add token as a query parameter for all Box endpoints
         queryParams.append('token', boxToken);
+      }
+    }
+    
+    // Handle Egnyte token if present
+    if (selectedIntegration === 'egnyte') {
+      const egnyteToken = localStorage.getItem('egnyteAccessToken');
+      if (egnyteToken) {
+        // Add token as a query parameter for all Egnyte endpoints
+        queryParams.append('token', egnyteToken);
       }
     }
 
@@ -397,6 +431,74 @@ const ApiTester = () => {
   const renderAuthForm = () => {
     if (!currentIntegration) return null;
     
+    // Special handling for Egnyte
+    if (selectedIntegration === 'egnyte') {
+      const egnyteToken = localStorage.getItem('egnyteAccessToken');
+      
+      if (egnyteToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Egnyte</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('egnyteAccessToken');
+                  localStorage.removeItem('egnyteRefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method: OAuth</label>
+          </div>
+          
+          <div className="auth-form">
+            <div className="auth-group">
+              <label htmlFor="egnyte-subdomain">Subdomain *</label>
+              <input
+                type="text"
+                id="egnyte-subdomain"
+                name="subdomain"
+                placeholder="Enter your Egnyte subdomain (e.g., 'company')"
+                value={egnyteSubdomain}
+                onChange={handleSubdomainChange}
+                required
+              />
+              <small className="help-text">
+                Your Egnyte subdomain is the part before '.egnyte.com' in your Egnyte URL.
+              </small>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('egnyte')}
+              disabled={!egnyteSubdomain}
+            >
+              Connect with Egnyte
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Egnyte account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    }
+    
     // Special handling for Box
     if (selectedIntegration === 'box') {
       const boxToken = localStorage.getItem('boxAccessToken');
@@ -411,7 +513,7 @@ const ApiTester = () => {
                 className="btn btn-secondary"
                 onClick={() => {
                   localStorage.removeItem('boxAccessToken');
-                  localStorage.removeItem('boxrefreshToken');
+                  localStorage.removeItem('boxRefreshToken');
                   setAuthData({});
                   setResponse(null);
                   window.location.reload(); // Reload to reset the UI state
@@ -908,7 +1010,8 @@ const ApiTester = () => {
           {currentIntegration && 
            ((selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) || 
             (selectedIntegration === 'box' && localStorage.getItem('boxAccessToken')) ||
-            (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && 
+            (selectedIntegration === 'egnyte' && localStorage.getItem('egnyteAccessToken')) ||
+            (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && selectedIntegration !== 'egnyte' && 
              (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
@@ -930,7 +1033,8 @@ const ApiTester = () => {
 
           {currentEndpoint && 
            (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api') && 
-           (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) && (
+           (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) &&
+           (selectedIntegration !== 'egnyte' || localStorage.getItem('egnyteAccessToken')) && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>
