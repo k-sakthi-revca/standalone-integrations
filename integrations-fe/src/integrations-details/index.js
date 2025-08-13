@@ -7,7 +7,9 @@ import box from './box';
 import egnyte from './egnyte';
 import fmp from './fmp';
 import salesforce from './salesforce';
-import sharepoint from './sharepoint'
+import sharepoint from './sharepoint';
+import solarwinds from './solarwinds';
+
 
 // Combine all integrations into a single object
 const integrations = {
@@ -19,7 +21,8 @@ const integrations = {
   egnyte,
   fmp,
   salesforce,
-  sharepoint
+  sharepoint,
+  solarwinds
 };
 
 export default integrations;

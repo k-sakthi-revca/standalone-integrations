@@ -34,10 +34,14 @@ const ApiTester = () => {
     }
   }, [selectedIntegration]);
 
-  // Reset parameters when endpoint changes, but preserve baseUri for Meraki
+  // Reset parameters when endpoint changes, but preserve baseUri for Meraki and SolarWinds
   useEffect(() => {
     // If it's the Meraki integration and baseUri exists, preserve it
     if (selectedIntegration === 'meraki' && paramValues.baseUri) {
+      const baseUri = paramValues.baseUri;
+      setParamValues({ baseUri });
+    } else if (selectedIntegration === 'solarwinds' && paramValues.baseUri) {
+      // Preserve baseUri for SolarWinds
       const baseUri = paramValues.baseUri;
       setParamValues({ baseUri });
     } else if (selectedIntegration === 'ciscoDna' && paramValues.baseUrl) {
@@ -284,6 +288,14 @@ const ApiTester = () => {
       queryParams.append('baseUri', paramValues.baseUri);
       // Also add it as a header
       headers['X-Meraki-Base-URI'] = paramValues.baseUri;
+    }
+    
+    // Handle SolarWinds baseUri if present
+    if (selectedIntegration === 'solarwinds' && paramValues.baseUri) {
+      // Add baseUri as a query parameter for SolarWinds API
+      queryParams.append('baseUri', paramValues.baseUri);
+      // Also add it as a header
+      headers['X-Base-URL'] = paramValues.baseUri;
     }
     
     // Handle Box token if present
@@ -1186,6 +1198,7 @@ const ApiTester = () => {
           {currentIntegration && renderAuthForm()}
 
           {currentIntegration && selectedIntegration === 'meraki' && merakiAuthMethod === 'api' && renderAdditionalConfig()}
+          {currentIntegration && selectedIntegration === 'solarwinds' && renderAdditionalConfig()}
 
           {/* Show endpoint selector for authenticated integrations */}
           {currentIntegration && 
