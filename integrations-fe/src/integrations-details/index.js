@@ -9,6 +9,7 @@ import fmp from './fmp';
 import salesforce from './salesforce';
 import sharepoint from './sharepoint';
 import solarwinds from './solarwinds';
+import cribl from './cribl';
 
 
 // Combine all integrations into a single object
@@ -22,7 +23,8 @@ const integrations = {
   fmp,
   salesforce,
   sharepoint,
-  solarwinds
+  solarwinds,
+  cribl
 };
 
 export default integrations;

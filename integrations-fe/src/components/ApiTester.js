@@ -18,6 +18,7 @@ const ApiTester = () => {
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
   const [sharepointAuthMethod, setSharepointAuthMethod] = useState('oauth'); // Only 'oauth' for Sharepoint
+  const [criblAuthenticated, setCriblAuthenticated] = useState(false); // Track Cribl authentication status
 
   // Current integration and endpoint objects
   const currentIntegration = selectedIntegration ? integrations[selectedIntegration] : null;
@@ -31,6 +32,12 @@ const ApiTester = () => {
     const baseUrl = localStorage.getItem('ciscoDnaBaseUrl');
     if (token && baseUrl && selectedIntegration === 'ciscoDna') {
       setCiscoDnaAuthenticated(true);
+    }
+    
+    // Check if Cribl token exists in localStorage
+    const criblToken = localStorage.getItem('criblAccessToken');
+    if (criblToken && selectedIntegration === 'cribl') {
+      setCriblAuthenticated(true);
     }
   }, [selectedIntegration]);
 
@@ -48,10 +55,14 @@ const ApiTester = () => {
       // Preserve baseUrl for Cisco DNA
       const baseUrl = paramValues.baseUrl;
       setParamValues({ baseUrl });
+    } else if (selectedIntegration === 'cribl') {
+      // Preserve Cribl authentication parameters
+      const { clientId, clientSecret, baseUrl } = paramValues;
+      setParamValues({ clientId, clientSecret, baseUrl });
     } else {
       setParamValues({});
     }
-  }, [selectedEndpoint, selectedIntegration, paramValues.baseUri, paramValues.baseUrl]);
+  }, [selectedEndpoint, selectedIntegration]);
 
   useEffect(()=>{
     const params = new URLSearchParams(window.location.search);
@@ -131,6 +142,16 @@ const ApiTester = () => {
         setCiscoDnaAuthenticated(true);
       } else {
         setCiscoDnaAuthenticated(false);
+      }
+    }
+    
+    // Check if Cribl token exists in localStorage
+    if (integration === 'cribl') {
+      const token = localStorage.getItem('criblAccessToken');
+      if (token) {
+        setCriblAuthenticated(true);
+      } else {
+        setCriblAuthenticated(false);
       }
     }
   };
@@ -264,6 +285,55 @@ const ApiTester = () => {
     }
   };
 
+  // Handle Cribl authentication
+  const handleCriblAuth = async (e) => {
+    e.preventDefault();
+    
+    if (!paramValues.clientId || !paramValues.clientSecret || !paramValues.baseUrl) {
+      setError('Client ID, Client Secret, and Base URL are required for Cribl authentication.');
+      return;
+    }
+
+    // Show loading state
+    setLoading(true);
+    setError('');
+    setResponse(null);
+
+    try {
+      // Make the API call to get token
+      const res = await fetch(`${integrations.cribl.baseUrl}/auth/cribl`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          clientId: paramValues.clientId,
+          clientSecret: paramValues.clientSecret,
+          baseUrl: paramValues.baseUrl
+        })
+      });
+
+      // Parse the response
+      const data = await res.json();
+
+      if (res.ok && data.access_token) {
+        // Store token and baseUrl in localStorage
+        localStorage.setItem('criblAccessToken', data.access_token);
+        localStorage.setItem('criblBaseUrl', paramValues.baseUrl);
+        console.log('✅ Cribl token and baseUrl stored in localStorage');
+        
+        // Set authenticated state
+        setCriblAuthenticated(true);
+      } else {
+        setError(`Authentication failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setError(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Execute API request
   const executeRequest = async (e) => {
     e.preventDefault();
@@ -335,6 +405,20 @@ const ApiTester = () => {
       if (sharepointToken) {
         // Add token as a query parameter for all Sharepoint endpoints
         queryParams.append('token', sharepointToken);
+      }
+    }
+    
+    // Handle Cribl token if present
+    if (selectedIntegration === 'cribl') {
+      const criblToken = localStorage.getItem('criblAccessToken');
+      const baseUrl = localStorage.getItem('criblBaseUrl');
+      if (criblToken) {
+        // Add token as Authorization header
+        headers['Authorization'] = `Bearer ${criblToken}`;
+        // Add baseUrl as a header
+        if (baseUrl) {
+          headers['X-Base-URL'] = baseUrl;
+        }
       }
     }
 
@@ -500,6 +584,85 @@ const ApiTester = () => {
   // Render authentication form
   const renderAuthForm = () => {
     if (!currentIntegration) return null;
+    
+    // Special handling for Cribl
+    if (selectedIntegration === 'cribl') {
+      if (criblAuthenticated) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Cribl</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('criblAccessToken');
+                  localStorage.removeItem('criblBaseUrl');
+                  setCriblAuthenticated(false);
+                  setAuthData({});
+                  setResponse(null);
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <form onSubmit={handleCriblAuth}>
+            <div className="auth-form">
+              <div className="config-group">
+                <label htmlFor="config-clientId">Client ID *</label>
+                <input
+                  type="text"
+                  id="config-clientId"
+                  name="clientId"
+                  placeholder="Enter your Cribl Client ID"
+                  value={paramValues.clientId || ''}
+                  onChange={handleParamChange}
+                  required
+                />
+              </div>
+              <div className="config-group">
+                <label htmlFor="config-clientSecret">Client Secret *</label>
+                <input
+                  type="password"
+                  id="config-clientSecret"
+                  name="clientSecret"
+                  placeholder="Enter your Cribl Client Secret"
+                  value={paramValues.clientSecret || ''}
+                  onChange={handleParamChange}
+                  required
+                />
+              </div>
+              <div className="config-group">
+                <label htmlFor="config-baseUrl">Base URL *</label>
+                <input
+                  type="text"
+                  id="config-baseUrl"
+                  name="baseUrl"
+                  placeholder="Cribl Base URL (e.g., https://your-instance.cribl.cloud)"
+                  value={paramValues.baseUrl || ''}
+                  onChange={handleParamChange}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn execute-btn"
+                disabled={loading}
+              >
+                {loading ? 'Authenticating...' : 'Get Token'}
+              </button>
+            </div>
+          </form>
+        </div>
+      );
+    }
     
     // Special handling for Egnyte
     if (selectedIntegration === 'egnyte') {
@@ -1207,9 +1370,10 @@ const ApiTester = () => {
             (selectedIntegration === 'egnyte' && localStorage.getItem('egnyteAccessToken')) ||
             (selectedIntegration === 'salesforce' && localStorage.getItem('salesforceAccessToken')) ||
             (selectedIntegration === 'sharepoint' && localStorage.getItem('sharepointAccessToken')) ||
+            (selectedIntegration === 'cribl' && criblAuthenticated) ||
             (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && 
              selectedIntegration !== 'egnyte' && selectedIntegration !== 'salesforce' && 
-             selectedIntegration !== 'sharepoint' && 
+             selectedIntegration !== 'sharepoint' && selectedIntegration !== 'cribl' && 
              (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
@@ -1234,7 +1398,8 @@ const ApiTester = () => {
            (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) &&
            (selectedIntegration !== 'egnyte' || localStorage.getItem('egnyteAccessToken')) &&
            (selectedIntegration !== 'salesforce' || localStorage.getItem('salesforceAccessToken')) &&
-           (selectedIntegration !== 'sharepoint' || localStorage.getItem('sharepointAccessToken')) && (
+           (selectedIntegration !== 'sharepoint' || localStorage.getItem('sharepointAccessToken')) &&
+           (selectedIntegration !== 'cribl' || criblAuthenticated) && (
             <div className="parameters-container">
               <h3>Parameters</h3>
               <form onSubmit={executeRequest}>

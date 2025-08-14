@@ -14,6 +14,7 @@ const solarwindsRoutes = require('./routes/solarwinds');
 const fmpRoutes = require('./routes/fmp');
 const salesforceRoutes = require('./routes/salesforce');
 const sharepointRoutes = require('./routes/sharepoint');
+const criblRoutes = require('./routes/cribl');
 
 const SyslogServer = require("syslog-server");
 
@@ -67,7 +68,7 @@ app.use('/api/solarwinds', solarwindsRoutes);
 app.use('/api/fmp', fmpRoutes);
 app.use('/api/salesforce', salesforceRoutes);
 app.use('/api/sharepoint', sharepointRoutes);
-
+app.use('/api/cribl', criblRoutes);
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');
