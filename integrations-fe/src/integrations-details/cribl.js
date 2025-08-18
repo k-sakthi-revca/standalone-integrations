@@ -41,9 +41,16 @@ const cribl = {
             id: "getWorker",
             name: "Get a worker",
             method: "GET",
-            path: "/workers/{guid}",
+            path: "/worker/{guid}",
             description: "Retrieve a worker with its GUID",
-            parameters: []
+                        parameters: [
+                {
+                    name: "guid",
+                    type: "text",
+                    required: true,
+                    description: "Worker's GUID"
+                }
+            ]
         },
     ]
 };

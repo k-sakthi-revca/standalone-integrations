@@ -102,7 +102,7 @@ router.get("/workers", async (req, res) => {
  * ======================= 2. GET Worker by GUID =======================
  * Example: GET /workers/:guid
  */
-router.get("/workers/:guid", async (req, res) => {
+router.get("/worker/:guid", async (req, res) => {
   const { baseUrl, apiKey } = req;
   const { guid } = req.params;
   try {

@@ -426,12 +426,15 @@ const ApiTester = () => {
     Object.keys(paramValues).forEach(paramName => {
       // Skip baseUri as it's handled separately
       if (paramName === 'baseUri' || paramName === 'baseUrl') return;
-
+console.log("sssss", paramValues,paramName)
       // Replace path parameters in the format {param_name}
       const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
       if (pathParamRegex.test(path)) {
         path = path.replace(pathParamRegex, paramValues[paramName]);
       }
+      console.log("pathParamRegex", pathParamRegex)
+      console.log("paramValues[paramName]", paramValues[paramName])
+      console.log("path",path)
     });
 
     // Add integration-specific headers
@@ -445,6 +448,10 @@ const ApiTester = () => {
       
       // Skip auth check for Cisco DNA as we're using token from localStorage
       if (selectedIntegration === 'ciscoDna' && ciscoDnaAuthenticated) {
+        // Auth is handled via token from localStorage
+      }
+      // Skip auth check for Cisco DNA as we're using token from localStorage
+      else if (selectedIntegration === 'cribl' && criblAuthenticated) {
         // Auth is handled via token from localStorage
       } else if (type === 'apiKey' && keyName) {
         if (authData.token) {
