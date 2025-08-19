@@ -118,4 +118,28 @@ router.get("/worker/:guid", async (req, res) => {
   }
 });
 
+router.post("/logs", (req, res) => {
+  console.log("📥 Headers:", req.headers);
+
+  let raw = req.body; // since express.raw() gives Buffer
+  console.log("📥 Raw Body:", raw);
+
+  let logs;
+
+  try {
+    // Try NDJSON (newline-delimited JSON)
+    logs = raw
+      .trim()
+      .split("\n")
+      .map(line => JSON.parse(line));
+  } catch (err) {
+    // If parsing fails, just keep it as raw string
+    logs = raw;
+  }
+
+  console.log("✅ Parsed Logs:", logs);
+  res.status(200).json({ success: true });
+});
+
+
 module.exports = router;

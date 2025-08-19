@@ -159,5 +159,56 @@ router.get('/sharepoint/sites/:siteId/lists/:listId/items', async (req, res) => 
         res.status(500).json({ message: "Failed to fetch list items", error: error.message });
     }
 });
+// Get SharePoint Root
+router.get('/sharepoint/root', async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) return res.status(400).json({ message: "token is required" });
+
+    try {
+        const data = await fetchFromSharepoint('https://graph.microsoft.com/v1.0/me/drive/root', token);
+        res.json(data);
+    } catch (error) {
+        console.error("❌ SharePoint root fetch error:", error.response?.data || error.message);
+        res.status(500).json({ message: "Failed to fetch SharePoint root", error: error.message });
+    }
+});
+
+// Get Files in SharePoint Root Folder
+router.get('/sharepoint/root/files', async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) return res.status(400).json({ message: "token is required" });
+
+    try {
+        const data = await fetchFromSharepoint('https://graph.microsoft.com/v1.0/me/drive/root/children', token);
+        res.json(data);
+    } catch (error) {
+        console.error("❌ SharePoint root files fetch error:", error.response?.data || error.message);
+        res.status(500).json({ message: "Failed to fetch files in root folder", error: error.message });
+    }
+});
+
+// Get Files in Specific Folder
+router.get('/sharepoint/folder/:folderPath', async (req, res) => {
+    const { token } = req.query;
+    const {folderPath} = req.params;
+console.log("ss", folderPath)
+    if (!token || !folderPath) {
+        return res.status(400).json({ message: "token and folderPath are required" });
+    }
+
+    try {
+        // Fetch files inside folder
+        const data = await fetchFromSharepoint(
+            `https://graph.microsoft.com/v1.0/me/drive/root:/${folderPath}:/children`,
+            token
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("❌ SharePoint folder fetch error:", error.response?.data || error.message);
+        res.status(500).json({ message: "Failed to fetch folder files", error: error.message });
+    }
+});
 
 module.exports = router;

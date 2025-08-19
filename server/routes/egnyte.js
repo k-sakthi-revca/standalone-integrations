@@ -31,7 +31,7 @@ router.get('/auth/egnyte', (req, res) => {
     }
 
     const state = Math.random().toString(36).substring(2, 15); // Optional CSRF protection
-
+console.log(subdomain)
     const authorizeUrl = `https://${subdomain}.egnyte.com/puboauth/authorize?response_type=code&client_id=${EGNYTE_CLIENT_ID}&redirect_uri=${encodeURIComponent(EGNYTE_REDIRECT_URI)}&state=${state}`;
 
     // Save both subdomain and frontend URL in cookies

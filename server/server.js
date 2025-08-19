@@ -22,6 +22,10 @@ const SyslogServer = require("syslog-server");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const syslogServer = new SyslogServer();
+app.use(
+  "/api/cribl/logs",
+  express.raw({ type: "*/*", limit: "10mb" })  // capture anything
+);
 // Apply express.raw() *only* to the webhook route
 app.post('/api/meraki/webhook', express.raw({ type: '*/*' }), (req, res) => {
   const SHARED_SECRET = "193296e25da6f13d794296adf525b0b49e42f664"; // ✅ move to .env in production
@@ -42,8 +46,9 @@ app.post('/api/meraki/webhook', express.raw({ type: '*/*' }), (req, res) => {
 });
 // Middleware
 app.use(cors());
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));             // handles JSON logs
+app.use(express.text({ type: "*/*", limit: "10mb" })); 
 
 // Request logging middleware
 app.use((req, res, next) => {
