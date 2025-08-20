@@ -141,7 +141,7 @@ router.get('/salesforce/contacts', async (req, res) => {
     try {
         // Query for contacts using SOQL
         const data = await fetchFromSalesforce(
-            `${instanceUrl}/services/data/v56.0/query?q=${encodeURIComponent('SELECT Id, FirstName, LastName, Email, Phone FROM Contact LIMIT 10')}`, 
+            `${instanceUrl}/services/data/v61.0/query?q=SELECT+Id,FirstName,LastName,Email,CreatedDate+FROM+Contact+ORDER+BY+CreatedDate+DESC+LIMIT+10`, 
             token
         );
         res.json(data);
