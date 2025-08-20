@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './ApiTester.css';
 import integrations from '../integrations-details';
 import DriveTreeView from './DriveTreeView/DriveTreeView';
+import BoxTreeView from './BoxTreeView/BoxTreeView';
 
 const ApiTester = () => {
   // State
@@ -1377,6 +1378,15 @@ console.log("sssss", paramValues,paramName)
       return (
         <div className="results-container">
           <DriveTreeView token={localStorage.getItem('gdriveAccessToken')} />
+        </div>
+      );
+    }
+    
+    // Special handling for Box - show tree view instead of regular response
+    if (selectedIntegration === 'box' && localStorage.getItem('boxAccessToken')) {
+      return (
+        <div className="results-container">
+          <BoxTreeView token={localStorage.getItem('boxAccessToken')} />
         </div>
       );
     }

@@ -202,5 +202,115 @@ router.get("/box/events", async (req, res) => {
     }
 });
 
+// Endpoint to get Box files in a tree structure
+router.get("/box-tree", async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).json({ message: "Token missing in query params" });
+    }
+
+    try {
+        // Create the root node
+        const rootNode = {
+            id: "0",
+            name: "All Files",
+            type: "folder",
+            children: []
+        };
+
+        // Function to recursively fetch folder contents and build the tree
+        const fetchFolderContents = async (parentNode) => {
+            try {
+                console.log(`Fetching contents of folder: ${parentNode.name} (${parentNode.id})`);
+                const folderItems = await fetchFromBox(`https://api.box.com/2.0/folders/${parentNode.id}/items?limit=1000`, token);
+                
+                // Process each item in the folder
+                for (const item of folderItems.entries) {
+                    const node = {
+                        id: item.id,
+                        name: item.name,
+                        type: item.type,
+                        parent: { id: parentNode.id },
+                        children: []
+                    };
+                    
+                    // Add to parent's children
+                    parentNode.children.push(node);
+                    
+                    // If it's a folder, recursively fetch its contents
+                    if (item.type === "folder") {
+                        await fetchFolderContents(node);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error fetching folder ${parentNode.id}:`, error.message);
+                // Continue with other folders even if one fails
+            }
+        };
+        
+        // Start the recursive process from the root
+        await fetchFolderContents(rootNode);
+        
+        res.json(rootNode);
+    } catch (error) {
+        console.log("Error in fetching Box tree", error.message);
+        res.status(500).json({
+            message: "Error in fetching Box tree",
+            error: error.message
+        });
+    }
+});
+
+// Endpoint to move a file or folder to a new parent
+router.patch("/move-file", async (req, res) => {
+    const { token } = req.query;
+    const { fileId, newParentId, oldParentId } = req.body;
+
+    if (!token) {
+        return res.status(400).json({ message: "Token missing in query params" });
+    }
+
+    if (!fileId || !newParentId) {
+        return res.status(400).json({ message: "fileId and newParentId are required in request body" });
+    }
+
+    try {
+        // Determine if it's a file or folder
+        let itemType;
+        try {
+            await fetchFromBox(`https://api.box.com/2.0/files/${fileId}`, token);
+            itemType = "files";
+        } catch (err) {
+            itemType = "folders";
+        }
+
+        // Make the API call to move the item
+        const response = await axios.put(
+            `https://api.box.com/2.0/${itemType}/${fileId}`,
+            {
+                parent: { id: newParentId }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: `${itemType === "files" ? "File" : "Folder"} moved successfully`,
+            data: response.data
+        });
+    } catch (error) {
+        console.log("Error moving item:", error.response?.data || error.message);
+        res.status(500).json({
+            message: "Error moving item",
+            error: error.response?.data || error.message
+        });
+    }
+});
 
 module.exports = router;
