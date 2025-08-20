@@ -18,6 +18,7 @@ const ApiTester = () => {
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
   const [sharepointAuthMethod, setSharepointAuthMethod] = useState('oauth'); // Only 'oauth' for Sharepoint
+  const [gdriveAuthMethod, setGdriveAuthMethod] = useState('oauth'); // Only 'oauth' for Google Drive
   const [criblAuthenticated, setCriblAuthenticated] = useState(false); // Track Cribl authentication status
 
   // Current integration and endpoint objects
@@ -87,6 +88,12 @@ const ApiTester = () => {
           localStorage.setItem('sharepointRefreshToken', refreshToken);
           localStorage.removeItem('sharepointAuthInProgress');
         }
+        // Check if we're in the process of authenticating with Google Drive
+        else if (localStorage.getItem('gdriveAuthInProgress') === 'true') {
+          localStorage.setItem('gdriveAccessToken', accessToken);
+          localStorage.setItem('gdriveRefreshToken', refreshToken);
+          localStorage.removeItem('gdriveAuthInProgress');
+        }
         // Check if we're in the process of authenticating with Egnyte
         else if (localStorage.getItem('egnyteAuthInProgress') === 'true') {
           localStorage.setItem('egnyteAccessToken', accessToken);
@@ -127,6 +134,11 @@ const ApiTester = () => {
     // Set Sharepoint auth method to OAuth by default
     if (integration === 'sharepoint') {
       setSharepointAuthMethod('oauth');
+    }
+    
+    // Set Google Drive auth method to OAuth by default
+    if (integration === 'gdrive') {
+      setGdriveAuthMethod('oauth');
     }
 
     // Reset Egnyte subdomain when changing integrations
@@ -192,6 +204,12 @@ const ApiTester = () => {
       
       // Redirect to the Sharepoint OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/sharepoint/auth/sharepoint?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'gdrive') {
+      // Set a flag to indicate we're authenticating with Google Drive
+      localStorage.setItem('gdriveAuthInProgress', 'true');
+      
+      // Redirect to the Google Drive OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/gdrive/auth/gdrive?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -405,6 +423,15 @@ const ApiTester = () => {
       if (sharepointToken) {
         // Add token as a query parameter for all Sharepoint endpoints
         queryParams.append('token', sharepointToken);
+      }
+    }
+    
+    // Handle Google Drive token if present
+    if (selectedIntegration === 'gdrive') {
+      const gdriveToken = localStorage.getItem('gdriveAccessToken');
+      if (gdriveToken) {
+        // Add token as a query parameter for all Google Drive endpoints
+        queryParams.append('token', gdriveToken);
       }
     }
     
@@ -995,6 +1022,67 @@ console.log("sssss", paramValues,paramName)
             </button>
             <small className="help-text">
               Click to authenticate with your Microsoft Sharepoint account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    }
+    
+    // Special handling for Google Drive
+    if (selectedIntegration === 'gdrive') {
+      const gdriveToken = localStorage.getItem('gdriveAccessToken');
+      
+      if (gdriveToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Google Drive</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('gdriveAccessToken');
+                  localStorage.removeItem('gdriveRefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="gdriveAuthMethod"
+                  value="oauth"
+                  checked={gdriveAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('gdrive')}
+            >
+              Connect with Google Drive
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Google Drive account using OAuth.
             </small>
           </div>
         </div>
