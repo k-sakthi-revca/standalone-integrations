@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './ApiTester.css';
 import integrations from '../integrations-details';
+import DriveTreeView from './DriveTreeView/DriveTreeView';
 
 const ApiTester = () => {
   // State
@@ -1371,6 +1372,15 @@ console.log("sssss", paramValues,paramName)
 
   // Render response tabs
   const renderResponseTabs = () => {
+    // Special handling for Google Drive - show tree view instead of regular response
+    if (selectedIntegration === 'gdrive' && localStorage.getItem('gdriveAccessToken')) {
+      return (
+        <div className="results-container">
+          <DriveTreeView token={localStorage.getItem('gdriveAccessToken')} />
+        </div>
+      );
+    }
+
     if (!response) return null;
 
     return (
