@@ -4,6 +4,7 @@ import integrations from '../integrations-details';
 import DriveTreeView from './DriveTreeView/DriveTreeView';
 import BoxTreeView from './BoxTreeView/BoxTreeView';
 import SharepointTreeView from './SharepointTreeView/SharepointTreeView';
+import EgnyteTreeView from './EgnyteTreeView/EgnyteTreeView';
 
 const ApiTester = () => {
   // State
@@ -1397,6 +1398,15 @@ console.log("sssss", paramValues,paramName)
       return (
         <div className="results-container">
           <SharepointTreeView token={localStorage.getItem('sharepointAccessToken')} />
+        </div>
+      );
+    }
+    
+    // Special handling for Egnyte - show tree view instead of regular response
+    if (selectedIntegration === 'egnyte' && localStorage.getItem('egnyteAccessToken')) {
+      return (
+        <div className="results-container">
+          <EgnyteTreeView token={localStorage.getItem('egnyteAccessToken')} subdomain={egnyteSubdomain} />
         </div>
       );
     }

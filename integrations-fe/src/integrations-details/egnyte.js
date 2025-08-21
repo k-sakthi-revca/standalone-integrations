@@ -4,12 +4,15 @@ const egnyte = {
     baseUrl: "http://localhost:5000/api/egnyte",
     auth: {
         type: "oauth",
-        keyName: "Authorization"
+        keyName: "Authorization",
+        additionalParams: ["subdomain"]
     },
     headers: {
         "Accept": "application/json",
         "Content-Type": "application/json"
     },
+    hasTreeView: true,
+    treeViewComponent: "EgnyteTreeView",
     endpoints: [
         {
             id: "getUserInfo",
