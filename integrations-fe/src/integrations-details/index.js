@@ -11,6 +11,7 @@ import sharepoint from './sharepoint';
 import solarwinds from './solarwinds';
 import cribl from './cribl';
 import gdrive from './gdrive';
+import dropbox from './dropbox';
 
 // Combine all integrations into a single object
 const integrations = {
@@ -25,7 +26,8 @@ const integrations = {
   sharepoint,
   solarwinds,
   cribl,
-  gdrive
+  gdrive,
+  dropbox
 };
 
 export default integrations;

@@ -5,6 +5,7 @@ import DriveTreeView from './DriveTreeView/DriveTreeView';
 import BoxTreeView from './BoxTreeView/BoxTreeView';
 import SharepointTreeView from './SharepointTreeView/SharepointTreeView';
 import EgnyteTreeView from './EgnyteTreeView/EgnyteTreeView';
+import DropboxTreeView from './DropboxTreeView/DropboxTreeView';
 
 const ApiTester = () => {
   // State
@@ -23,6 +24,7 @@ const ApiTester = () => {
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
   const [sharepointAuthMethod, setSharepointAuthMethod] = useState('oauth'); // Only 'oauth' for Sharepoint
   const [gdriveAuthMethod, setGdriveAuthMethod] = useState('oauth'); // Only 'oauth' for Google Drive
+  const [dropboxAuthMethod, setDropboxAuthMethod] = useState('oauth'); // Only 'oauth' for Dropbox
   const [criblAuthenticated, setCriblAuthenticated] = useState(false); // Track Cribl authentication status
 
   // Current integration and endpoint objects
@@ -103,6 +105,12 @@ const ApiTester = () => {
           localStorage.setItem('egnyteAccessToken', accessToken);
           localStorage.setItem('egnyteRefreshToken', refreshToken);
           localStorage.removeItem('egnyteAuthInProgress');
+        }
+        // Check if we're in the process of authenticating with Dropbox
+        else if (localStorage.getItem('dropboxAuthInProgress') === 'true') {
+          localStorage.setItem('dropboxAccessToken', accessToken);
+          localStorage.setItem('dropboxRefreshToken', refreshToken);
+          localStorage.removeItem('dropboxAuthInProgress');
         } else {
           // Default to Box if no specific auth is in progress
           localStorage.setItem('boxAccessToken', accessToken);
@@ -214,6 +222,12 @@ const ApiTester = () => {
       
       // Redirect to the Google Drive OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/gdrive/auth/gdrive?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'dropbox') {
+      // Set a flag to indicate we're authenticating with Dropbox
+      localStorage.setItem('dropboxAuthInProgress', 'true');
+      
+      // Redirect to the Dropbox OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/dropbox/auth/dropbox?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -1093,6 +1107,67 @@ console.log("sssss", paramValues,paramName)
       );
     }
     
+    // Special handling for Dropbox
+    if (selectedIntegration === 'dropbox') {
+      const dropboxToken = localStorage.getItem('dropboxAccessToken');
+      
+      if (dropboxToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Dropbox</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('dropboxAccessToken');
+                  localStorage.removeItem('dropboxRefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="dropboxAuthMethod"
+                  value="oauth"
+                  checked={dropboxAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('dropbox')}
+            >
+              Connect with Dropbox
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Dropbox account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    }
+    
     // Special handling for Meraki to show auth method selection
     if (selectedIntegration === 'meraki') {
       return (
@@ -1407,6 +1482,15 @@ console.log("sssss", paramValues,paramName)
       return (
         <div className="results-container">
           <EgnyteTreeView token={localStorage.getItem('egnyteAccessToken')} subdomain={egnyteSubdomain} />
+        </div>
+      );
+    }
+    
+    // Special handling for Dropbox - show tree view instead of regular response
+    if (selectedIntegration === 'dropbox' && localStorage.getItem('dropboxAccessToken')) {
+      return (
+        <div className="results-container">
+          <DropboxTreeView token={localStorage.getItem('dropboxAccessToken')} />
         </div>
       );
     }
