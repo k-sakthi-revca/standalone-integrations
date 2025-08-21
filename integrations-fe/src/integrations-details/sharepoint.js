@@ -93,6 +93,41 @@ const sharepoint = {
                     description: "List ID"
                 }
             ]
+        },
+        {
+            id: "getSharepointTree",
+            name: "Get Folder Hierarchy",
+            method: "GET",
+            path: "/sharepoint-tree",
+            description: "Retrieve the complete folder hierarchy from SharePoint",
+            parameters: []
+        },
+        {
+            id: "moveFile",
+            name: "Move File",
+            method: "PATCH",
+            path: "/move-file",
+            description: "Move a file or folder to a different location in SharePoint",
+            parameters: [
+                {
+                    name: "fileId",
+                    type: "text",
+                    required: true,
+                    description: "ID of the file or folder to move"
+                },
+                {
+                    name: "newParentId",
+                    type: "text",
+                    required: true,
+                    description: "ID of the destination folder"
+                },
+                {
+                    name: "oldParentId",
+                    type: "text",
+                    required: false,
+                    description: "ID of the current parent folder"
+                }
+            ]
         }
     ]
 };

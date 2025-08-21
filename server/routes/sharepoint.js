@@ -26,6 +26,20 @@ const fetchFromSharepoint = async (url, token) => {
     return response.data;
 };
 
+// Helper function to make POST/PATCH/PUT requests to Microsoft Graph API
+const modifySharepoint = async (url, method, data, token) => {
+    const response = await axios({
+        method,
+        url,
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        data,
+    });
+    return response.data;
+};
+
 /**
  * GET /auth/sharepoint
  * Redirect user to Microsoft login consent screen
@@ -193,7 +207,7 @@ router.get('/sharepoint/root/files', async (req, res) => {
 router.get('/sharepoint/folder/:folderPath', async (req, res) => {
     const { token } = req.query;
     const {folderPath} = req.params;
-console.log("ss", folderPath)
+    
     if (!token || !folderPath) {
         return res.status(400).json({ message: "token and folderPath are required" });
     }
@@ -208,6 +222,119 @@ console.log("ss", folderPath)
     } catch (error) {
         console.error("❌ SharePoint folder fetch error:", error.response?.data || error.message);
         res.status(500).json({ message: "Failed to fetch folder files", error: error.message });
+    }
+});
+
+// Endpoint to get SharePoint files in a tree structure
+router.get("/sharepoint-tree", async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).json({ message: "Token missing in query params" });
+    }
+
+    try {
+        // Create the root node
+        const rootNode = {
+            id: "root",
+            name: "All Files",
+            folder: { childCount: 0 },
+            children: []
+        };
+
+        // Function to recursively fetch folder contents and build the tree
+        const fetchFolderContents = async (parentNode, itemPath = '') => {
+            try {
+                console.log(`Fetching contents of folder: ${parentNode.name} (${parentNode.id})`);
+                
+                // Determine the API endpoint based on whether it's the root or a subfolder
+                let endpoint;
+                if (parentNode.id === "root") {
+                    endpoint = `https://graph.microsoft.com/v1.0/me/drive/root/children`;
+                } else if (itemPath) {
+                    endpoint = `https://graph.microsoft.com/v1.0/me/drive/root:/${itemPath}:/children`;
+                } else {
+                    endpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${parentNode.id}/children`;
+                }
+                
+                const folderItems = await fetchFromSharepoint(endpoint, token);
+                
+                // Process each item in the folder
+                for (const item of folderItems.value) {
+                    const node = {
+                        id: item.id,
+                        name: item.name,
+                        folder: item.folder,
+                        parentReference: item.parentReference,
+                        children: []
+                    };
+                    
+                    // Add to parent's children
+                    parentNode.children.push(node);
+                    
+                    // If it's a folder, recursively fetch its contents
+                    if (item.folder) {
+                        const newPath = itemPath ? `${itemPath}/${item.name}` : item.name;
+                        await fetchFolderContents(node, newPath);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error fetching folder ${parentNode.id}:`, error.message);
+                // Continue with other folders even if one fails
+            }
+        };
+        
+        // Start the recursive process from the root
+        await fetchFolderContents(rootNode);
+        
+        res.json(rootNode);
+    } catch (error) {
+        console.log("Error in fetching SharePoint tree", error.message);
+        res.status(500).json({
+            message: "Error in fetching SharePoint tree",
+            error: error.message
+        });
+    }
+});
+
+// Endpoint to move a file or folder to a new parent
+router.patch("/move-file", async (req, res) => {
+    const { token } = req.query;
+    const { fileId, newParentId, oldParentId } = req.body;
+
+    if (!token) {
+        return res.status(400).json({ message: "Token missing in query params" });
+    }
+
+    if (!fileId || !newParentId) {
+        return res.status(400).json({ message: "fileId and newParentId are required in request body" });
+    }
+
+    try {
+        // Make the API call to move the item
+        const response = await modifySharepoint(
+            `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}`,
+            'PATCH',
+            {
+                parentReference: { 
+                    id: newParentId === "root" ? null : newParentId,
+                    driveId: "me" 
+                }
+            },
+            token
+        );
+
+        res.json({
+            success: true,
+            message: "Item moved successfully",
+            data: response
+        });
+    } catch (error) {
+        console.log("Error moving item:", error.response?.data || error.message);
+        res.status(500).json({
+            message: "Error moving item",
+            error: error.response?.data || error.message
+        });
     }
 });
 

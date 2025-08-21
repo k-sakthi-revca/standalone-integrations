@@ -3,6 +3,7 @@ import './ApiTester.css';
 import integrations from '../integrations-details';
 import DriveTreeView from './DriveTreeView/DriveTreeView';
 import BoxTreeView from './BoxTreeView/BoxTreeView';
+import SharepointTreeView from './SharepointTreeView/SharepointTreeView';
 
 const ApiTester = () => {
   // State
@@ -1387,6 +1388,15 @@ console.log("sssss", paramValues,paramName)
       return (
         <div className="results-container">
           <BoxTreeView token={localStorage.getItem('boxAccessToken')} />
+        </div>
+      );
+    }
+    
+    // Special handling for SharePoint - show tree view instead of regular response
+    if (selectedIntegration === 'sharepoint' && localStorage.getItem('sharepointAccessToken')) {
+      return (
+        <div className="results-container">
+          <SharepointTreeView token={localStorage.getItem('sharepointAccessToken')} />
         </div>
       );
     }
