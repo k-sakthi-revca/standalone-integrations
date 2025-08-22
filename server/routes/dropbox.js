@@ -197,6 +197,127 @@ router.get("/dropbox/files/:path/content", async (req, res) => {
     }
 });
 
+// Download a file directly
+router.get("/download-file", async (req, res) => {
+    const { token, path } = req.query;
+
+    if (!token) return res.status(400).json({ message: "token is required" });
+    if (!path) return res.status(400).json({ message: "path is required" });
+
+    try {
+        // First get file metadata to get the file name
+        const metadataResponse = await axios({
+            method: 'post',
+            url: 'https://api.dropboxapi.com/2/files/get_metadata',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            data: { path }
+        });
+
+        const fileName = metadataResponse.data.name;
+
+        // Use the temporary link API instead of direct download
+        // This is more reliable and avoids some API restrictions
+        const tempLinkResponse = await axios({
+            method: 'post',
+            url: 'https://api.dropboxapi.com/2/files/get_temporary_link',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            data: { path }
+        });
+
+        // Get the temporary download URL
+        const downloadUrl = tempLinkResponse.data.link;
+
+        // Download the file from the temporary URL
+        const fileResponse = await axios({
+            method: 'get',
+            url: downloadUrl,
+            responseType: 'arraybuffer'
+        });
+
+        // Set appropriate headers for file download
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'application/octet-stream');
+        
+        // Send the file data
+        res.send(fileResponse.data);
+    } catch (error) {
+        console.error("❌ File download error:", error.response?.data || error.message);
+        res.status(500).json({ message: "Failed to download file", error: error.message });
+    }
+});
+
+// Download a folder as zip
+router.get("/download-folder", async (req, res) => {
+    const { token, path } = req.query;
+
+    if (!token) return res.status(400).json({ message: "token is required" });
+    if (!path) return res.status(400).json({ message: "path is required" });
+
+    try {
+        // Get folder metadata to get the folder name
+        const metadataResponse = await axios({
+            method: 'post',
+            url: 'https://api.dropboxapi.com/2/files/get_metadata',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            data: { path }
+        });
+
+        const folderName = metadataResponse.data.name;
+
+        // Create a zip download of the folder
+        // Note: The correct format for the Dropbox-API-Arg header
+        const response = await axios({
+            method: 'post',
+            url: 'https://content.dropboxapi.com/2/files/download_zip',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Dropbox-API-Arg': JSON.stringify({ path }),
+                'Content-Type': '' // Empty content type as required by Dropbox API
+            },
+            responseType: 'arraybuffer'
+        });
+
+        // Set appropriate headers for zip file download
+        res.setHeader('Content-Disposition', `attachment; filename="${folderName}.zip"`);
+        res.setHeader('Content-Type', 'application/zip');
+        
+        // Send the zip file data
+        res.send(response.data);
+    } catch (error) {
+        // Provide more detailed error information
+        let errorMessage = error.message;
+        if (error.response && error.response.data) {
+            try {
+                // Try to parse the error data if it's a buffer
+                if (Buffer.isBuffer(error.response.data)) {
+                    errorMessage = error.response.data.toString('utf8');
+                } else {
+                    errorMessage = JSON.stringify(error.response.data);
+                }
+            } catch (e) {
+                // If parsing fails, use the original error message
+                console.error("Error parsing error response:", e);
+            }
+        }
+        
+        console.error("❌ Folder download error:", errorMessage);
+        res.status(500).json({ 
+            message: "Failed to download folder", 
+            error: errorMessage,
+            status: error.response ? error.response.status : 'unknown'
+        });
+    }
+});
+
 // Endpoint to get Dropbox files in a tree structure
 router.get("/dropbox-tree", async (req, res) => {
     const { token } = req.query;
