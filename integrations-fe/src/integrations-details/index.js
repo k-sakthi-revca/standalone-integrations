@@ -7,7 +7,7 @@ import box from './box';
 import egnyte from './egnyte';
 import fmp from './fmp';
 import salesforce from './salesforce';
-import sharepoint from './sharepoint';
+import office365 from './office365';
 import solarwinds from './solarwinds';
 import cribl from './cribl';
 import gdrive from './gdrive';
@@ -23,7 +23,7 @@ const integrations = {
   egnyte,
   fmp,
   salesforce,
-  sharepoint,
+  office365,
   solarwinds,
   cribl,
   gdrive,

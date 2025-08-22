@@ -13,7 +13,7 @@ const egnyteRoutes = require('./routes/egnyte');
 const solarwindsRoutes = require('./routes/solarwinds');
 const fmpRoutes = require('./routes/fmp');
 const salesforceRoutes = require('./routes/salesforce');
-const sharepointRoutes = require('./routes/sharepoint');
+const office365Routes = require('./routes/office365');
 const criblRoutes = require('./routes/cribl');
 const gdriveRoutes = require('./routes/gdrive');
 const dropboxRoutes = require('./routes/dropbox');
@@ -74,7 +74,7 @@ app.use('/api/egnyte', egnyteRoutes);
 app.use('/api/solarwinds', solarwindsRoutes);
 app.use('/api/fmp', fmpRoutes);
 app.use('/api/salesforce', salesforceRoutes);
-app.use('/api/sharepoint', sharepointRoutes);
+app.use('/api/office365', office365Routes);
 app.use('/api/cribl', criblRoutes);
 app.use('/api/gdrive', gdriveRoutes);
 app.use('/api/dropbox', dropboxRoutes)

@@ -15,7 +15,7 @@ const SharepointTreeContent = ({ token }) => {
     
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/sharepoint/sharepoint-tree?token=${token}`);
+      const response = await fetch(`http://localhost:5000/api/office365/sharepoint-tree?token=${token}`);
       
       if (!response.ok) {
         throw new Error(`Error fetching SharePoint tree: ${response.statusText}`);
@@ -49,7 +49,7 @@ const SharepointTreeContent = ({ token }) => {
 
   return (
     <div className="sharepoint-tree-container">
-      <h2>SharePoint Explorer</h2>
+      <h2>OneDrive Explorer</h2>
       
       {/* Status and action bar */}
       <div className="sharepoint-tree-status">

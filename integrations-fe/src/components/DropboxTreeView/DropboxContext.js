@@ -122,29 +122,29 @@ export const DropboxProvider = ({ children, token, onRefresh }) => {
     setDownloadStatus(`Preparing download for ${selectedItems.length} item(s)...`);
     
     // Download each selected item
-    selectedItems.forEach(item => {
-      try {
-        // Create a hidden anchor element to trigger the download
-        const downloadLink = document.createElement('a');
-        
-        if (item.type === 'folder') {
-          downloadLink.href = `http://localhost:5000/api/dropbox/download-folder?token=${token}&path=${encodeURIComponent(item.id)}`;
-          downloadLink.download = `${item.name}.zip`;
-        } else {
-          downloadLink.href = `http://localhost:5000/api/dropbox/download-file?token=${token}&path=${encodeURIComponent(item.id)}`;
-          downloadLink.download = item.name;
-        }
-        
-        downloadLink.target = '_blank';
-        
-        // Append to the document, click it, and remove it
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      } catch (err) {
-        console.error(`Error downloading ${item.name}:`, err);
+    selectedItems.forEach((item, index) => {
+  setTimeout(() => {
+    try {
+      const downloadLink = document.createElement('a');
+
+      if (item.type === 'folder') {
+        downloadLink.href = `http://localhost:5000/api/dropbox/download-folder?token=${token}&path=${encodeURIComponent(item.id)}`;
+        downloadLink.download = `${item.name}.zip`;
+      } else {
+        downloadLink.href = `http://localhost:5000/api/dropbox/download-file?token=${token}&path=${encodeURIComponent(item.id)}`;
+        downloadLink.download = item.name;
       }
-    });
+
+      downloadLink.target = '_blank';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    } catch (err) {
+      console.error(`Error downloading ${item.name}:`, err);
+    }
+  }, index * 1000); // wait 1 second between downloads
+});
+
     
     setDownloadStatus(`Download started for ${selectedItems.length} item(s)`);
     

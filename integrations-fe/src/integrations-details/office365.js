@@ -1,7 +1,7 @@
-// Sharepoint integration configuration
-const sharepoint = {
-    name: "Sharepoint",
-    baseUrl: "http://localhost:5000/api/sharepoint",
+// Office365 integration configuration
+const office365 = {
+    name: "Office 365",
+    baseUrl: "http://localhost:5000/api/office365",
     auth: {
         type: "oauth",
         keyName: "Authorization"
@@ -15,7 +15,7 @@ const sharepoint = {
             id: "getUserInfo",
             name: "Get User Info",
             method: "GET",
-            path: "/sharepoint/user",
+            path: "/office365/user",
             description: "Retrieve information about the authenticated Sharepoint user",
             parameters: []
         },
@@ -23,7 +23,7 @@ const sharepoint = {
             id: "getRoot",
             name: "Get Root",
             method: "GET",
-            path: "/sharepoint/root",
+            path: "/office365/root",
             description: "Retrieve root folder in Sharepoint",
             parameters: []
         },
@@ -31,7 +31,7 @@ const sharepoint = {
             id: "getRootFiles",
             name: "Get Root Files",
             method: "GET",
-            path: "/sharepoint/root/files",
+            path: "/office365/root/files",
             description: "Retrieve root files in Sharepoint",
             parameters: []
         },
@@ -39,7 +39,7 @@ const sharepoint = {
             id: "getFilesInFolder",
             name: "Get Files",
             method: "GET",
-            path: "/sharepoint/folder/{folderPath}",
+            path: "/office365/folder/{folderPath}",
             description: "Retrieve lists of files from a specific Sharepoint folder",
             parameters: [
                 {
@@ -54,7 +54,7 @@ const sharepoint = {
             id: "getSites",
             name: "Get Sites",
             method: "GET",
-            path: "/sharepoint/sites",
+            path: "/office365/sites",
             description: "Retrieve available sites from Sharepoint",
             parameters: []
         },
@@ -62,7 +62,7 @@ const sharepoint = {
             id: "getLists",
             name: "Get Lists",
             method: "GET",
-            path: "/sharepoint/sites/{siteId}/lists",
+            path: "/office365/sites/{siteId}/lists",
             description: "Retrieve lists from a specific Sharepoint site",
             parameters: [
                 {
@@ -77,7 +77,7 @@ const sharepoint = {
             id: "getListItems",
             name: "Get List Items",
             method: "GET",
-            path: "/sharepoint/sites/{siteId}/lists/{listId}/items",
+            path: "/office365/sites/{siteId}/lists/{listId}/items",
             description: "Retrieve items from a specific Sharepoint list",
             parameters: [
                 {
@@ -132,4 +132,4 @@ const sharepoint = {
     ]
 };
 
-export default sharepoint;
+export default office365;

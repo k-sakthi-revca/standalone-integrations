@@ -41,11 +41,11 @@ const modifySharepoint = async (url, method, data, token) => {
 };
 
 /**
- * GET /auth/sharepoint
+ * GET /auth/office365
  * Redirect user to Microsoft login consent screen
  * Accepts ?frontEndUrl=https://your-frontend.com
  */
-router.get('/auth/sharepoint', (req, res) => {
+router.get('/auth/office365', (req, res) => {
     const { frontEndUrl } = req.query;
     if (!frontEndUrl) {
         return res.status(400).json({ error: 'Missing frontEndUrl in query params' });
@@ -68,7 +68,7 @@ router.get('/auth/sharepoint', (req, res) => {
 });
 
 /**
- * GET /auth/sharepoint/callback
+ * GET /auth/office365/callback
  * Handle OAuth callback, exchange code for token, then redirect to frontend
  */
 router.get('/auth/callback', async (req, res) => {
@@ -110,7 +110,7 @@ router.get('/auth/callback', async (req, res) => {
 });
 
 // Get User Info
-router.get('/sharepoint/user', async (req, res) => {
+router.get('/office365/user', async (req, res) => {
     const { token } = req.query;
 
     if (!token) return res.status(400).json({ message: "token is required" });
@@ -125,7 +125,7 @@ router.get('/sharepoint/user', async (req, res) => {
 });
 
 // Get Sites
-router.get('/sharepoint/sites', async (req, res) => {
+router.get('/office365/sites', async (req, res) => {
     const { token } = req.query;
 
     if (!token) return res.status(400).json({ message: "token is required" });
@@ -140,7 +140,7 @@ router.get('/sharepoint/sites', async (req, res) => {
 });
 
 // Get Lists for a specific site
-router.get('/sharepoint/sites/:siteId/lists', async (req, res) => {
+router.get('/office365/sites/:siteId/lists', async (req, res) => {
     const { token } = req.query;
     const { siteId } = req.params;
 
@@ -157,7 +157,7 @@ router.get('/sharepoint/sites/:siteId/lists', async (req, res) => {
 });
 
 // Get List Items for a specific list
-router.get('/sharepoint/sites/:siteId/lists/:listId/items', async (req, res) => {
+router.get('/office365/sites/:siteId/lists/:listId/items', async (req, res) => {
     const { token } = req.query;
     const { siteId, listId } = req.params;
 
@@ -174,7 +174,7 @@ router.get('/sharepoint/sites/:siteId/lists/:listId/items', async (req, res) => 
     }
 });
 // Get SharePoint Root
-router.get('/sharepoint/root', async (req, res) => {
+router.get('/office365/root', async (req, res) => {
     const { token } = req.query;
 
     if (!token) return res.status(400).json({ message: "token is required" });
@@ -189,7 +189,7 @@ router.get('/sharepoint/root', async (req, res) => {
 });
 
 // Get Files in SharePoint Root Folder
-router.get('/sharepoint/root/files', async (req, res) => {
+router.get('/office365/root/files', async (req, res) => {
     const { token } = req.query;
 
     if (!token) return res.status(400).json({ message: "token is required" });
@@ -204,7 +204,7 @@ router.get('/sharepoint/root/files', async (req, res) => {
 });
 
 // Get Files in Specific Folder
-router.get('/sharepoint/folder/:folderPath', async (req, res) => {
+router.get('/office365/folder/:folderPath', async (req, res) => {
     const { token } = req.query;
     const {folderPath} = req.params;
     

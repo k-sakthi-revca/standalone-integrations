@@ -22,7 +22,7 @@ const ApiTester = () => {
   const [boxAuthMethod, setBoxAuthMethod] = useState('oauth'); // Only 'oauth' for Box
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
-  const [sharepointAuthMethod, setSharepointAuthMethod] = useState('oauth'); // Only 'oauth' for Sharepoint
+  const [office365AuthMethod, setOffice365AuthMethod] = useState('oauth'); // Only 'oauth' for Office365
   const [gdriveAuthMethod, setGdriveAuthMethod] = useState('oauth'); // Only 'oauth' for Google Drive
   const [dropboxAuthMethod, setDropboxAuthMethod] = useState('oauth'); // Only 'oauth' for Dropbox
   const [criblAuthenticated, setCriblAuthenticated] = useState(false); // Track Cribl authentication status
@@ -88,11 +88,11 @@ const ApiTester = () => {
           }
           localStorage.removeItem('salesforceAuthInProgress');
         }
-        // Check if we're in the process of authenticating with Sharepoint
-        else if (localStorage.getItem('sharepointAuthInProgress') === 'true') {
-          localStorage.setItem('sharepointAccessToken', accessToken);
-          localStorage.setItem('sharepointRefreshToken', refreshToken);
-          localStorage.removeItem('sharepointAuthInProgress');
+        // Check if we're in the process of authenticating with Office365
+        else if (localStorage.getItem('office365AuthInProgress') === 'true') {
+          localStorage.setItem('office365AccessToken', accessToken);
+          localStorage.setItem('office365RefreshToken', refreshToken);
+          localStorage.removeItem('office365AuthInProgress');
         }
         // Check if we're in the process of authenticating with Google Drive
         else if (localStorage.getItem('gdriveAuthInProgress') === 'true') {
@@ -143,9 +143,9 @@ const ApiTester = () => {
       setBoxAuthMethod('oauth');
     }
     
-    // Set Sharepoint auth method to OAuth by default
-    if (integration === 'sharepoint') {
-      setSharepointAuthMethod('oauth');
+    // Set Office365 auth method to OAuth by default
+    if (integration === 'office365') {
+      setOffice365AuthMethod('oauth');
     }
     
     // Set Google Drive auth method to OAuth by default
@@ -210,12 +210,12 @@ const ApiTester = () => {
       
       // Redirect to the Salesforce OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/salesforce/auth/salesforce?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
-    } else if (integration === 'sharepoint') {
-      // Set a flag to indicate we're authenticating with Sharepoint
-      localStorage.setItem('sharepointAuthInProgress', 'true');
+    } else if (integration === 'office365') {
+      // Set a flag to indicate we're authenticating with Office365
+      localStorage.setItem('office365AuthInProgress', 'true');
       
-      // Redirect to the Sharepoint OAuth route with frontEndUrl as a query parameter
-      window.location.href = `http://localhost:5000/api/sharepoint/auth/sharepoint?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+      // Redirect to the Office365 OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/office365/auth/office365?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     } else if (integration === 'gdrive') {
       // Set a flag to indicate we're authenticating with Google Drive
       localStorage.setItem('gdriveAuthInProgress', 'true');
@@ -435,12 +435,12 @@ const ApiTester = () => {
       }
     }
     
-    // Handle Sharepoint token if present
-    if (selectedIntegration === 'sharepoint') {
-      const sharepointToken = localStorage.getItem('sharepointAccessToken');
-      if (sharepointToken) {
-        // Add token as a query parameter for all Sharepoint endpoints
-        queryParams.append('token', sharepointToken);
+    // Handle Office365 token if present
+    if (selectedIntegration === 'office365') {
+      const office365Token = localStorage.getItem('office365AccessToken');
+      if (office365Token) {
+        // Add token as a query parameter for all Office365 endpoints
+        queryParams.append('token', office365Token);
       }
     }
     
@@ -985,21 +985,21 @@ console.log("sssss", paramValues,paramName)
       );
     }
     
-    // Special handling for Sharepoint
-    if (selectedIntegration === 'sharepoint') {
-      const sharepointToken = localStorage.getItem('sharepointAccessToken');
+    // Special handling for Office365
+    if (selectedIntegration === 'office365') {
+      const office365Token = localStorage.getItem('office365AccessToken');
       
-      if (sharepointToken) {
+      if (office365Token) {
         return (
           <div className="auth-section">
             <h3>Authentication</h3>
             <div className="auth-status success">
-              <p>✅ Authenticated with Sharepoint</p>
+              <p>✅ Authenticated with Office 365</p>
               <button 
                 className="btn btn-secondary"
                 onClick={() => {
-                  localStorage.removeItem('sharepointAccessToken');
-                  localStorage.removeItem('sharepointRefreshToken');
+                  localStorage.removeItem('office365AccessToken');
+                  localStorage.removeItem('office365RefreshToken');
                   setAuthData({});
                   setResponse(null);
                   window.location.reload(); // Reload to reset the UI state
@@ -1021,9 +1021,9 @@ console.log("sssss", paramValues,paramName)
               <label>
                 <input
                   type="radio"
-                  name="sharepointAuthMethod"
+                  name="office365AuthMethod"
                   value="oauth"
-                  checked={sharepointAuthMethod === 'oauth'}
+                  checked={office365AuthMethod === 'oauth'}
                   readOnly
                 />
                 OAuth
@@ -1034,12 +1034,12 @@ console.log("sssss", paramValues,paramName)
           <div className="oauth-connect">
             <button 
               className="btn oauth-btn"
-              onClick={() => handleOAuthConnect('sharepoint')}
+              onClick={() => handleOAuthConnect('office365')}
             >
-              Connect with Sharepoint
+              Connect with Office 365
             </button>
             <small className="help-text">
-              Click to authenticate with your Microsoft Sharepoint account using OAuth.
+              Click to authenticate with your Microsoft Office 365 account using OAuth.
             </small>
           </div>
         </div>
@@ -1468,11 +1468,11 @@ console.log("sssss", paramValues,paramName)
       );
     }
     
-    // Special handling for SharePoint - show tree view instead of regular response
-    if (selectedIntegration === 'sharepoint' && localStorage.getItem('sharepointAccessToken')) {
+    // Special handling for Office365 - show tree view instead of regular response
+    if (selectedIntegration === 'office365' && localStorage.getItem('office365AccessToken')) {
       return (
         <div className="results-container">
-          <SharepointTreeView token={localStorage.getItem('sharepointAccessToken')} />
+          <SharepointTreeView token={localStorage.getItem('office365AccessToken')} />
         </div>
       );
     }
@@ -1588,11 +1588,11 @@ console.log("sssss", paramValues,paramName)
             (selectedIntegration === 'box' && localStorage.getItem('boxAccessToken')) ||
             (selectedIntegration === 'egnyte' && localStorage.getItem('egnyteAccessToken')) ||
             (selectedIntegration === 'salesforce' && localStorage.getItem('salesforceAccessToken')) ||
-            (selectedIntegration === 'sharepoint' && localStorage.getItem('sharepointAccessToken')) ||
+            (selectedIntegration === 'office365' && localStorage.getItem('office365AccessToken')) ||
             (selectedIntegration === 'cribl' && criblAuthenticated) ||
             (selectedIntegration !== 'ciscoDna' && selectedIntegration !== 'box' && 
              selectedIntegration !== 'egnyte' && selectedIntegration !== 'salesforce' && 
-             selectedIntegration !== 'sharepoint' && selectedIntegration !== 'cribl' && 
+             selectedIntegration !== 'office365' && selectedIntegration !== 'cribl' && 
              (selectedIntegration !== 'meraki' || merakiAuthMethod === 'api'))) && (
             <div className="endpoint-selector">
               <label htmlFor="endpoint-select">Select Endpoint:</label>
@@ -1617,7 +1617,7 @@ console.log("sssss", paramValues,paramName)
            (selectedIntegration !== 'box' || localStorage.getItem('boxAccessToken')) &&
            (selectedIntegration !== 'egnyte' || localStorage.getItem('egnyteAccessToken')) &&
            (selectedIntegration !== 'salesforce' || localStorage.getItem('salesforceAccessToken')) &&
-           (selectedIntegration !== 'sharepoint' || localStorage.getItem('sharepointAccessToken')) &&
+           (selectedIntegration !== 'office365' || localStorage.getItem('office365AccessToken')) &&
            (selectedIntegration !== 'cribl' || criblAuthenticated) && (
             <div className="parameters-container">
               <h3>Parameters</h3>
