@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const qs = require('qs');
 const cookieParser = require('cookie-parser');
+const archiver = require('archiver');
 require('dotenv').config();
 
 const router = express.Router();
@@ -294,6 +295,137 @@ router.get("/sharepoint-tree", async (req, res) => {
             message: "Error in fetching SharePoint tree",
             error: error.message
         });
+    }
+});
+
+// Download a file directly
+router.get("/download-file", async (req, res) => {
+    const { token, id } = req.query;
+
+    if (!token) return res.status(400).json({ message: "token is required" });
+    if (!id) return res.status(400).json({ message: "id is required" });
+
+    try {
+        // First get file metadata to get the file name
+        const metadataResponse = await axios({
+            method: 'get',
+            url: `https://graph.microsoft.com/v1.0/me/drive/items/${id}`,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const fileName = metadataResponse.data.name;
+
+        // Get the download URL
+        const downloadResponse = await axios({
+            method: 'get',
+            url: `https://graph.microsoft.com/v1.0/me/drive/items/${id}/content`,
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            responseType: 'arraybuffer'
+        });
+
+        // Set appropriate headers for file download
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'application/octet-stream');
+        
+        // Send the file data
+        res.send(downloadResponse.data);
+    } catch (error) {
+        console.error("❌ File download error:", error.response?.data || error.message);
+        res.status(500).json({ message: "Failed to download file", error: error.message });
+    }
+});
+
+// Download a folder as zip
+router.get("/download-folder", async (req, res) => {
+    const { token, id } = req.query;
+
+    if (!token) return res.status(400).json({ message: "token is required" });
+    if (!id) return res.status(400).json({ message: "id is required" });
+
+    try {
+        // First get folder metadata to get the folder name
+        const metadataResponse = await axios({
+            method: 'get',
+            url: `https://graph.microsoft.com/v1.0/me/drive/items/${id}`,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const folderName = metadataResponse.data.name;
+
+        // Set up the response headers for a zip file
+        res.setHeader('Content-Disposition', `attachment; filename="${folderName}.zip"`);
+        res.setHeader('Content-Type', 'application/zip');
+
+        // Create a zip archive
+        const archive = archiver('zip', {
+            zlib: { level: 5 } // Compression level
+        });
+
+        // Pipe the archive to the response
+        archive.pipe(res);
+
+        // Function to recursively add files to the archive
+        const addFolderToArchive = async (folderId, folderPath = '') => {
+            try {
+                // Get all items in the folder
+                const folderContents = await axios({
+                    method: 'get',
+                    url: `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children`,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                // Process each item in the folder
+                for (const item of folderContents.data.value) {
+                    const itemPath = folderPath ? `${folderPath}/${item.name}` : item.name;
+
+                    if (item.folder) {
+                        // If it's a folder, recursively add its contents
+                        await addFolderToArchive(item.id, itemPath);
+                    } else {
+                        // If it's a file, download it and add to the archive
+                        try {
+                            const fileResponse = await axios({
+                                method: 'get',
+                                url: `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/content`,
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                responseType: 'arraybuffer'
+                            });
+
+                            // Add the file to the archive
+                            archive.append(fileResponse.data, { name: itemPath });
+                        } catch (fileError) {
+                            console.error(`Error downloading file ${item.name}:`, fileError.message);
+                            // Continue with other files even if one fails
+                        }
+                    }
+                }
+            } catch (folderError) {
+                console.error(`Error processing folder ${folderId}:`, folderError.message);
+                // Continue with other folders even if one fails
+            }
+        };
+
+        // Start the recursive process from the specified folder
+        await addFolderToArchive(id);
+
+        // Finalize the archive
+        archive.finalize();
+    } catch (error) {
+        console.error("❌ Folder download error:", error.response?.data || error.message);
+        res.status(500).json({ message: "Failed to download folder", error: error.message });
     }
 });
 

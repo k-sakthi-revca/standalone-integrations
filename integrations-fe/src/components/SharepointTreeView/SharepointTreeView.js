@@ -8,7 +8,23 @@ const SharepointTreeContent = ({ token }) => {
   const [tree, setTree] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { selectedNode, targetNode, loading: moveLoading, error: moveError, successMessage, clearSelections } = useContext(SharepointContext);
+  const { 
+    selectedNode, 
+    targetNode, 
+    loading: moveLoading, 
+    error: moveError, 
+    successMessage, 
+    downloadStatus,
+    clearSelections,
+    // New selection mode props
+    selectionMode,
+    toggleSelectionMode,
+    selectedItems,
+    finalizeSelection,
+    showSelectedTable,
+    downloadSelectedItems,
+    clearSelectedItems
+  } = useContext(SharepointContext);
 
   const fetchSharepointTree = async () => {
     if (!token) return;
@@ -51,42 +67,113 @@ const SharepointTreeContent = ({ token }) => {
     <div className="sharepoint-tree-container">
       <h2>OneDrive Explorer</h2>
       
+      {/* Selected files table */}
+      {showSelectedTable && (
+        <div className="sharepoint-selected-table">
+          <h3>Selected Files</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Path</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedItems.map(item => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td>{item.folder ? 'Folder' : 'File'}</td>
+                  <td>{item.id}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="sharepoint-selected-actions">
+            <button 
+              className="sharepoint-download-selected-btn"
+              onClick={downloadSelectedItems}
+            >
+              Download Selected Items
+            </button>
+            <button 
+              className="sharepoint-clear-selected-btn"
+              onClick={clearSelectedItems}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Selection mode controls */}
+      <div className="sharepoint-selection-controls">
+        <button 
+          className={`sharepoint-selection-mode-btn ${selectionMode ? 'active' : ''}`}
+          onClick={toggleSelectionMode}
+        >
+          {selectionMode ? 'Exit Selection Mode' : 'Select Items'}
+        </button>
+        
+        {selectionMode && selectedItems.length > 0 && (
+          <button 
+            className="sharepoint-finalize-btn"
+            onClick={finalizeSelection}
+          >
+            Finalize Selection ({selectedItems.length} items)
+          </button>
+        )}
+      </div>
+      
       {/* Status and action bar */}
       <div className="sharepoint-tree-status">
         {moveLoading && <div className="sharepoint-tree-loading-status">Moving file...</div>}
         {moveError && <div className="sharepoint-tree-error-status">Error: {moveError}</div>}
         {successMessage && <div className="sharepoint-tree-success-status">{successMessage}</div>}
+        {downloadStatus && <div className="sharepoint-tree-download-status">{downloadStatus}</div>}
         
-        {selectedNode && (
-          <div className="sharepoint-tree-selection">
-            <strong>Selected:</strong> {selectedNode.name} 
-            {selectedNode.folder ? " (Folder)" : " (File)"}
-          </div>
-        )}
-        
-        {targetNode && (
-          <div className="sharepoint-tree-target">
-            <strong>Target:</strong> {targetNode.name}
-          </div>
-        )}
-        
-        {(selectedNode || targetNode) && (
-          <button 
-            className="sharepoint-tree-clear-btn"
-            onClick={clearSelections}
-          >
-            Clear Selections
-          </button>
+        {!selectionMode && (
+          <>
+            {selectedNode && (
+              <div className="sharepoint-tree-selection">
+                <strong>Selected:</strong> {selectedNode.name} 
+                {selectedNode.folder ? " (Folder)" : " (File)"}
+              </div>
+            )}
+            
+            {targetNode && (
+              <div className="sharepoint-tree-target">
+                <strong>Target:</strong> {targetNode.name}
+              </div>
+            )}
+            
+            {(selectedNode || targetNode) && (
+              <button 
+                className="sharepoint-tree-clear-btn"
+                onClick={clearSelections}
+              >
+                Clear Selections
+              </button>
+            )}
+          </>
         )}
       </div>
       
       <div className="sharepoint-tree-instructions">
-        <p>To move a file or folder:</p>
-        <ol>
-          <li>Click "Select" on the item you want to move</li>
-          <li>Click "Target" on a folder where you want to move it</li>
-          <li>Click "Move" to complete the operation</li>
-        </ol>
+        {selectionMode ? (
+          <p>
+            <strong>Selection Mode:</strong> Check the boxes next to files and folders you want to download, 
+            then click "Finalize Selection" to proceed.
+          </p>
+        ) : (
+          <>
+            <p>Available operations:</p>
+            <ul>
+              <li><strong>Select Items:</strong> Click "Select Items" to enable multi-selection mode for downloading files and folders</li>
+              <li><strong>Move:</strong> Click "Select" on an item, "Target" on a destination folder, then "Move" to relocate it</li>
+            </ul>
+          </>
+        )}
       </div>
       
       <div className="sharepoint-tree">

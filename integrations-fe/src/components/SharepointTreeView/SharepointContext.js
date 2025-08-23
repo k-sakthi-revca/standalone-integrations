@@ -8,6 +8,12 @@ export const SharepointProvider = ({ children, token, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [downloadStatus, setDownloadStatus] = useState(null);
+  
+  // New state for selection mode and selected items
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [showSelectedTable, setShowSelectedTable] = useState(false);
 
   const moveFile = async (fileId, newParentId, oldParentId) => {
     if (!fileId || !newParentId) {
@@ -64,6 +70,162 @@ export const SharepointProvider = ({ children, token, onRefresh }) => {
     setTargetNode(null);
     setError(null);
     setSuccessMessage(null);
+    setDownloadStatus(null);
+  };
+  
+  // Toggle selection mode
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    if (selectionMode) {
+      // If turning off selection mode, clear selected items
+      setSelectedItems([]);
+      setShowSelectedTable(false);
+    }
+  };
+  
+  // Toggle item selection
+  const toggleItemSelection = (node) => {
+    if (!selectionMode) return;
+    
+    setSelectedItems(prevItems => {
+      const isSelected = prevItems.some(item => item.id === node.id);
+      if (isSelected) {
+        // Remove item if already selected
+        return prevItems.filter(item => item.id !== node.id);
+      } else {
+        // Add item if not selected
+        return [...prevItems, node];
+      }
+    });
+  };
+  
+  // Check if an item is selected
+  const isItemSelected = (nodeId) => {
+    return selectedItems.some(item => item.id === nodeId);
+  };
+  
+  // Finalize selection and show table
+  const finalizeSelection = () => {
+    if (selectedItems.length > 0) {
+      setShowSelectedTable(true);
+    } else {
+      setError('Please select at least one file or folder');
+    }
+  };
+  
+  // Download all selected items
+  const downloadSelectedItems = () => {
+    if (selectedItems.length === 0) {
+      setError('No items selected for download');
+      return;
+    }
+    
+    setDownloadStatus(`Preparing download for ${selectedItems.length} item(s)...`);
+    
+    // Download each selected item
+    selectedItems.forEach((item, index) => {
+      setTimeout(() => {
+        try {
+          const downloadLink = document.createElement('a');
+
+          if (item.folder) {
+            downloadLink.href = `http://localhost:5000/api/office365/download-folder?token=${token}&id=${encodeURIComponent(item.id)}`;
+            downloadLink.download = `${item.name}.zip`;
+          } else {
+            downloadLink.href = `http://localhost:5000/api/office365/download-file?token=${token}&id=${encodeURIComponent(item.id)}`;
+            downloadLink.download = item.name;
+          }
+
+          downloadLink.target = '_blank';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        } catch (err) {
+          console.error(`Error downloading ${item.name}:`, err);
+        }
+      }, index * 1000); // wait 1 second between downloads
+    });
+    
+    setDownloadStatus(`Download started for ${selectedItems.length} item(s)`);
+    
+    // Clear the status after a few seconds
+    setTimeout(() => {
+      setDownloadStatus(null);
+    }, 3000);
+  };
+  
+  // Clear selected items and hide table
+  const clearSelectedItems = () => {
+    setSelectedItems([]);
+    setShowSelectedTable(false);
+  };
+
+  // Download a single file
+  const downloadFile = (node) => {
+    if (!node || !token) {
+      setError('Missing required parameters for downloading file');
+      return;
+    }
+
+    setDownloadStatus(`Preparing download for ${node.name}...`);
+
+    try {
+      // Create a hidden anchor element to trigger the download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = `http://localhost:5000/api/office365/download-file?token=${token}&id=${encodeURIComponent(node.id)}`;
+      downloadLink.target = '_blank';
+      downloadLink.download = node.name;
+      
+      // Append to the document, click it, and remove it
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      setDownloadStatus(`Download started for ${node.name}`);
+      
+      // Clear the status after a few seconds
+      setTimeout(() => {
+        setDownloadStatus(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      setError(err.message);
+      setDownloadStatus(null);
+    }
+  };
+
+  // Download a folder as zip
+  const downloadFolder = (node) => {
+    if (!node || !token) {
+      setError('Missing required parameters for downloading folder');
+      return;
+    }
+
+    setDownloadStatus(`Preparing download for ${node.name} (this may take a while for large folders)...`);
+
+    try {
+      // Create a hidden anchor element to trigger the download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = `http://localhost:5000/api/office365/download-folder?token=${token}&id=${encodeURIComponent(node.id)}`;
+      downloadLink.target = '_blank';
+      downloadLink.download = `${node.name}.zip`;
+      
+      // Append to the document, click it, and remove it
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      setDownloadStatus(`Download started for ${node.name}.zip`);
+      
+      // Clear the status after a few seconds
+      setTimeout(() => {
+        setDownloadStatus(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error downloading folder:', err);
+      setError(err.message);
+      setDownloadStatus(null);
+    }
   };
 
   return (
@@ -76,8 +238,21 @@ export const SharepointProvider = ({ children, token, onRefresh }) => {
         loading,
         error,
         successMessage,
+        downloadStatus,
         moveFile,
-        clearSelections
+        clearSelections,
+        downloadFile,
+        downloadFolder,
+        // New selection mode values
+        selectionMode,
+        toggleSelectionMode,
+        selectedItems,
+        toggleItemSelection,
+        isItemSelected,
+        finalizeSelection,
+        showSelectedTable,
+        downloadSelectedItems,
+        clearSelectedItems
       }}
     >
       {children}
