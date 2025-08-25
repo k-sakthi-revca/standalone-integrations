@@ -347,6 +347,8 @@ router.get("/download-folder", async (req, res) => {
     if (!token) return res.status(400).json({ message: "token is required" });
     if (!id) return res.status(400).json({ message: "id is required" });
 
+    
+
     try {
         // First get folder metadata to get the folder name
         const metadataResponse = await axios({

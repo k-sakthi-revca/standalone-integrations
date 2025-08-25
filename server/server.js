@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const crypto = require('crypto');
+const session = require('express-session');
+const passport = require('passport');
 
 // Import routes
 const securityScorecardsRoutes = require('./routes/securityscorecards');
@@ -17,6 +19,7 @@ const office365Routes = require('./routes/office365');
 const criblRoutes = require('./routes/cribl');
 const gdriveRoutes = require('./routes/gdrive');
 const dropboxRoutes = require('./routes/dropbox');
+const oneloginRoutes = require('./routes/onelogin')
 
 const SyslogServer = require("syslog-server");
 
@@ -24,6 +27,26 @@ const SyslogServer = require("syslog-server");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const syslogServer = new SyslogServer();
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'supersecret', // change in prod
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // set true if using HTTPS
+}));
+
+// Initialize Passport + session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Serialize/deserialize user for session support
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
+
 app.use(
   "/api/cribl/logs",
   express.raw({ type: "*/*", limit: "10mb" })  // capture anything
@@ -77,7 +100,9 @@ app.use('/api/salesforce', salesforceRoutes);
 app.use('/api/office365', office365Routes);
 app.use('/api/cribl', criblRoutes);
 app.use('/api/gdrive', gdriveRoutes);
-app.use('/api/dropbox', dropboxRoutes)
+app.use('/api/dropbox', dropboxRoutes);
+app.use('/api/onelogin', oneloginRoutes)
+
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');
