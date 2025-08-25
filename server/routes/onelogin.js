@@ -42,7 +42,7 @@ router.post('/saml/callback',
   passport.authenticate('saml', { failureRedirect: '/', failureFlash: true }),
   (req, res) => {
     // Successful login
-    res.redirect(`http://localhost:3000/home`);
+    res.redirect(`http://localhost:3000/home?login=true`);
   }
 );
 

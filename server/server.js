@@ -19,7 +19,8 @@ const office365Routes = require('./routes/office365');
 const criblRoutes = require('./routes/cribl');
 const gdriveRoutes = require('./routes/gdrive');
 const dropboxRoutes = require('./routes/dropbox');
-const oneloginRoutes = require('./routes/onelogin')
+const oneloginRoutes = require('./routes/onelogin');
+const quickbooksRoutes = require('./routes/quickbooks');
 
 const SyslogServer = require("syslog-server");
 
@@ -101,7 +102,8 @@ app.use('/api/office365', office365Routes);
 app.use('/api/cribl', criblRoutes);
 app.use('/api/gdrive', gdriveRoutes);
 app.use('/api/dropbox', dropboxRoutes);
-app.use('/api/onelogin', oneloginRoutes)
+app.use('/api/onelogin', oneloginRoutes);
+app.use('/api/quickbooks', quickbooksRoutes);
 
 
 // Check if the React build directory exists

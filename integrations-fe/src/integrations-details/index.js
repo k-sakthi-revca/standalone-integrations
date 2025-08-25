@@ -12,6 +12,7 @@ import solarwinds from './solarwinds';
 import cribl from './cribl';
 import gdrive from './gdrive';
 import dropbox from './dropbox';
+import quickbooks from './quickbooks';
 
 // Combine all integrations into a single object
 const integrations = {
@@ -27,7 +28,8 @@ const integrations = {
   solarwinds,
   cribl,
   gdrive,
-  dropbox
+  dropbox,
+  quickbooks
 };
 
 export default integrations;

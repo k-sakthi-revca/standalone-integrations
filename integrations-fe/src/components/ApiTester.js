@@ -23,6 +23,7 @@ const ApiTester = () => {
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
   const [office365AuthMethod, setOffice365AuthMethod] = useState('oauth'); // Only 'oauth' for Office365
+  const [quickbooksAuthMethod, setQuickbooksAuthMethod] = useState('oauth'); // Only 'oauth' for Office365
   const [gdriveAuthMethod, setGdriveAuthMethod] = useState('oauth'); // Only 'oauth' for Google Drive
   const [dropboxAuthMethod, setDropboxAuthMethod] = useState('oauth'); // Only 'oauth' for Dropbox
   const [criblAuthenticated, setCriblAuthenticated] = useState(false); // Track Cribl authentication status
@@ -72,11 +73,27 @@ const ApiTester = () => {
   }, [selectedEndpoint, selectedIntegration]);
 
   useEffect(()=>{
+
+
+     const params = new URLSearchParams(window.location.search);
+
+     if(params){
+      
+      const login = params.get('login');
+
+      if(login){
+         localStorage.setItem('login', true);
+      }
+     }
+  },[])
+
+  useEffect(()=>{
     const params = new URLSearchParams(window.location.search);
     if(params){
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
       const instanceUrl = params.get('instance_url');
+      const quickbooksRealmId = params.get('realmId');
       
       if(accessToken || refreshToken){
         // Check if we're in the process of authenticating with Salesforce
@@ -111,6 +128,13 @@ const ApiTester = () => {
           localStorage.setItem('dropboxAccessToken', accessToken);
           localStorage.setItem('dropboxRefreshToken', refreshToken);
           localStorage.removeItem('dropboxAuthInProgress');
+        } 
+        // Check if we're in the process of authenticating with quickbooks
+        else if (localStorage.getItem('quickbooksAuthInProgress') === 'true') {
+          localStorage.setItem('quickbooksAccessToken', accessToken);
+          localStorage.setItem('quickbooksRefreshToken', refreshToken);
+          localStorage.removeItem('quickbooksAuthInProgress');
+          localStorage.setItem('quickbooksRealmId',quickbooksRealmId)
         } else {
           // Default to Box if no specific auth is in progress
           localStorage.setItem('boxAccessToken', accessToken);
@@ -146,6 +170,11 @@ const ApiTester = () => {
     // Set Office365 auth method to OAuth by default
     if (integration === 'office365') {
       setOffice365AuthMethod('oauth');
+    }
+
+    // Set quickbooks auth method to OAuth by default
+    if (integration === 'quickbooks') {
+      setQuickbooksAuthMethod('oauth');
     }
     
     // Set Google Drive auth method to OAuth by default
@@ -228,6 +257,12 @@ const ApiTester = () => {
       
       // Redirect to the Dropbox OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/dropbox/auth/dropbox?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    } else if (integration === 'quickbooks') {
+      // Set a flag to indicate we're authenticating with quickbooks
+      localStorage.setItem('quickbooksAuthInProgress', 'true');
+      
+      // Redirect to the quickbooks OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/quickbooks/auth/quickbooks?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -464,6 +499,15 @@ const ApiTester = () => {
         if (baseUrl) {
           headers['X-Base-URL'] = baseUrl;
         }
+      }
+    }
+     // Handle quickbooks token if present
+    if (selectedIntegration === 'quickbooks') {
+      const quickbooksToken = localStorage.getItem('quickbooksAccessToken');
+      const realmId = localStorage.getItem('quickbooksRealmId');
+      if (quickbooksToken) {
+        queryParams.append('token', quickbooksToken);
+        queryParams.append('realmId', realmId);
       }
     }
 
@@ -1040,6 +1084,67 @@ console.log("sssss", paramValues,paramName)
             </button>
             <small className="help-text">
               Click to authenticate with your Microsoft Office 365 account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    }
+
+     // Special handling for Quickbooks
+    if (selectedIntegration === 'quickbooks') {
+      const quickbooksToken = localStorage.getItem('quickbooksAccessToken');
+      
+      if (quickbooksToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Quickbooks</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('quickbooksAccessToken');
+                  localStorage.removeItem('quickbooksRefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="quickbooksAuthMethod"
+                  value="oauth"
+                  checked={quickbooksAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('quickbooks')}
+            >
+              Connect with Quickbooks
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Quickbooks account using OAuth.
             </small>
           </div>
         </div>
