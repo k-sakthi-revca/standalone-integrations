@@ -21,6 +21,7 @@ const gdriveRoutes = require('./routes/gdrive');
 const dropboxRoutes = require('./routes/dropbox');
 const oneloginRoutes = require('./routes/onelogin');
 const quickbooksRoutes = require('./routes/quickbooks');
+const xeroRoutes = require('./routes/xero');
 
 const SyslogServer = require("syslog-server");
 
@@ -104,7 +105,7 @@ app.use('/api/gdrive', gdriveRoutes);
 app.use('/api/dropbox', dropboxRoutes);
 app.use('/api/onelogin', oneloginRoutes);
 app.use('/api/quickbooks', quickbooksRoutes);
-
+app.use('/api/xero', xeroRoutes);
 
 // Check if the React build directory exists
 const reactBuildPath = path.join(__dirname, '..', 'integrations-fe', 'build');

@@ -13,6 +13,7 @@ import cribl from './cribl';
 import gdrive from './gdrive';
 import dropbox from './dropbox';
 import quickbooks from './quickbooks';
+import xero from './xero';
 
 // Combine all integrations into a single object
 const integrations = {
@@ -29,7 +30,8 @@ const integrations = {
   cribl,
   gdrive,
   dropbox,
-  quickbooks
+  quickbooks,
+  xero
 };
 
 export default integrations;

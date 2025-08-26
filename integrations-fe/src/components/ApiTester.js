@@ -23,7 +23,8 @@ const ApiTester = () => {
   const [egnyteSubdomain, setEgnyteSubdomain] = useState(''); // Subdomain for Egnyte
   const [salesforceAuthMethod, setSalesforceAuthMethod] = useState('oauth'); // Only 'oauth' for Salesforce
   const [office365AuthMethod, setOffice365AuthMethod] = useState('oauth'); // Only 'oauth' for Office365
-  const [quickbooksAuthMethod, setQuickbooksAuthMethod] = useState('oauth'); // Only 'oauth' for Office365
+  const [quickbooksAuthMethod, setQuickbooksAuthMethod] = useState('oauth'); // Only 'oauth' for Quickbooks
+  const [xeroAuthMethod, setXeroAuthMethod] = useState('oauth'); // Only 'oauth' for Xero
   const [gdriveAuthMethod, setGdriveAuthMethod] = useState('oauth'); // Only 'oauth' for Google Drive
   const [dropboxAuthMethod, setDropboxAuthMethod] = useState('oauth'); // Only 'oauth' for Dropbox
   const [criblAuthenticated, setCriblAuthenticated] = useState(false); // Track Cribl authentication status
@@ -135,6 +136,12 @@ const ApiTester = () => {
           localStorage.setItem('quickbooksRefreshToken', refreshToken);
           localStorage.removeItem('quickbooksAuthInProgress');
           localStorage.setItem('quickbooksRealmId',quickbooksRealmId)
+        }
+        // Check if we're in the process of authenticating with xero
+        else if (localStorage.getItem('xeroAuthInProgress') === 'true') {
+          localStorage.setItem('xeroAccessToken', accessToken);
+          localStorage.setItem('xeroRefreshToken', refreshToken);
+          localStorage.removeItem('xeroAuthInProgress');
         } else {
           // Default to Box if no specific auth is in progress
           localStorage.setItem('boxAccessToken', accessToken);
@@ -175,6 +182,11 @@ const ApiTester = () => {
     // Set quickbooks auth method to OAuth by default
     if (integration === 'quickbooks') {
       setQuickbooksAuthMethod('oauth');
+    }
+
+    // Set xero auth method to OAuth by default
+    if (integration === 'xero') {
+      setXeroAuthMethod('oauth');
     }
     
     // Set Google Drive auth method to OAuth by default
@@ -263,6 +275,12 @@ const ApiTester = () => {
       
       // Redirect to the quickbooks OAuth route with frontEndUrl as a query parameter
       window.location.href = `http://localhost:5000/api/quickbooks/auth/quickbooks?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
+    }  else if (integration === 'xero') {
+      // Set a flag to indicate we're authenticating with quickbooks
+      localStorage.setItem('xeroAuthInProgress', 'true');
+      
+      // Redirect to the quickbooks OAuth route with frontEndUrl as a query parameter
+      window.location.href = `http://localhost:5000/api/xero/auth/xero?frontEndUrl=${encodeURIComponent(frontEndUrl)}`;
     }
   };
 
@@ -509,13 +527,21 @@ const ApiTester = () => {
         queryParams.append('token', quickbooksToken);
         queryParams.append('realmId', realmId);
       }
+    };
+
+    // Handle quickbooks token if present
+    if (selectedIntegration === 'xero') {
+      const quickbooksToken = localStorage.getItem('xeroAccessToken');
+      if (quickbooksToken) {
+        queryParams.append('token', quickbooksToken);
+      }
     }
 
     // Process regular path parameters
     Object.keys(paramValues).forEach(paramName => {
       // Skip baseUri as it's handled separately
       if (paramName === 'baseUri' || paramName === 'baseUrl') return;
-console.log("sssss", paramValues,paramName)
+      console.log("sssss", paramValues,paramName)
       // Replace path parameters in the format {param_name}
       const pathParamRegex = new RegExp(`{${paramName}}`, 'g');
       if (pathParamRegex.test(path)) {
@@ -1149,7 +1175,68 @@ console.log("sssss", paramValues,paramName)
           </div>
         </div>
       );
-    }
+    };
+
+     // Special handling for Quickbooks
+    if (selectedIntegration === 'xero') {
+      const quickbooksToken = localStorage.getItem('xeroAccessToken');
+      
+      if (quickbooksToken) {
+        return (
+          <div className="auth-section">
+            <h3>Authentication</h3>
+            <div className="auth-status success">
+              <p>✅ Authenticated with Xero</p>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  localStorage.removeItem('xeroAccessToken');
+                  localStorage.removeItem('xeroRefreshToken');
+                  setAuthData({});
+                  setResponse(null);
+                  window.location.reload(); // Reload to reset the UI state
+                }}
+              > 
+                Disconnect
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="auth-section">
+          <h3>Authentication</h3>
+          <div className="auth-method-selector">
+            <label>Authentication Method:</label>
+            <div className="auth-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="xeroAuthMethod"
+                  value="oauth"
+                  checked={xeroAuthMethod === 'oauth'}
+                  readOnly
+                />
+                OAuth
+              </label>
+            </div>
+          </div>
+          
+          <div className="oauth-connect">
+            <button 
+              className="btn oauth-btn"
+              onClick={() => handleOAuthConnect('xero')}
+            >
+              Connect with Xero
+            </button>
+            <small className="help-text">
+              Click to authenticate with your Xero account using OAuth.
+            </small>
+          </div>
+        </div>
+      );
+    };
     
     // Special handling for Google Drive
     if (selectedIntegration === 'gdrive') {
